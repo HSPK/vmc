@@ -203,8 +203,5 @@ class TransformerGeneration(BaseGenerationModel):
     ) -> TokenizeOutput:
         if kwargs:
             logger.warning(f"{self.model_id} Unused kwargs: {kwargs}")
-        tokens = self.tokenizer.apply_chat_template(
-            conversation=content,
-            add_generation_prompt=True,
-        )
-        return TokenizeOutput(tokens=tokens, length=len(tokens))
+        tokens = self.prepare_input_chat_template(content)["input_ids"]
+        return TokenizeOutput(tokens=tokens, length=[len(tok) for tok in tokens])

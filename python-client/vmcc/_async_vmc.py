@@ -5,7 +5,6 @@ from typing import Any, Dict, Iterable, List, Literal, Optional, Union
 import httpx
 
 from vmcc.types import (
-    ContentType,
     EmbeddingResponse,
     Generation,
     GenerationChunk,
@@ -17,6 +16,7 @@ from vmcc.types import (
 from vmcc.types.generation.generation_params import (
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
+    GenerationMessageParam,
     ResponseFormat,
 )
 
@@ -56,7 +56,7 @@ class AsyncVMC:
         self._post = self._client.post
         self._stream = self._client.stream
 
-    async def _process_prompt(self, content: ContentType):
+    async def _process_prompt(self, content: GenerationMessageParam):
         if isinstance(content, str):
             content = await self._replace_image_with_id(content)
         return content
@@ -82,29 +82,35 @@ class AsyncVMC:
         image_id = await self._upload_image(image_path)
         return f"![{match.group(1)}]({image_id})"
 
-    async def tokenize(
+    def tokenize(
         self,
-        prompt: ContentType,
-        model: Optional[str] = None,
-        params: Optional[Dict[str, Any]] = {},
-        timeout: Optional[httpx.Timeout] = None,
+        content: Union[str, Iterable[str], Iterable[GenerationMessageParam]],
+        *,
+        model: str,
+        allowed_special: Union[Literal["all"], Iterable[str]] | NotGiven = NOT_GIVEN,
+        disallowed_special: Union[Literal["all"], Iterable[str]] | NotGiven = NOT_GIVEN,
+        timeout: float | httpx.Timeout | None = None,
         **kwargs,
     ) -> int:
         res = self._post(
             "tokenize",
-            body={
-                "prompt": self._process_prompt(prompt),
-                "model": model or self._default_model,
-                "params": {**params, **kwargs},
-            },
+            body=filter_not_given(
+                {
+                    "content": content,
+                    "model": model,
+                    "allowed_special": allowed_special,
+                    "disallowed_special": disallowed_special,
+                    **kwargs,
+                }
+            ),
             cast_to=TokenizeOutput,
             options={"timeout": timeout},
         )
-        return res.n_tokens
+        return res
 
     async def generate(
         self,
-        content: Union[str, Iterable[ContentType]],
+        content: Union[str, Iterable[GenerationMessageParam]],
         *,
         frequency_penalty: Optional[float] | NotGiven = NOT_GIVEN,
         logit_bias: Optional[Dict[str, int]] | NotGiven = NOT_GIVEN,
@@ -166,7 +172,7 @@ class AsyncVMC:
 
     async def stream(
         self,
-        content: Union[str, Iterable[ContentType]],
+        content: Union[str, Iterable[GenerationMessageParam]],
         *,
         frequency_penalty: Optional[float] | NotGiven = NOT_GIVEN,
         logit_bias: Optional[Dict[str, int]] | NotGiven = NOT_GIVEN,

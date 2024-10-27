@@ -161,8 +161,8 @@ class BaseGenerationModel(BaseModel, ABC):
         self,
         content: Union[str, Iterable[str], Iterable[GenerationMessageParam]],
         *,
-        allowed_special: Union[Literal["all"], AbstractSet[str]] = set(),
-        disallowed_special: Union[Literal["all"], Collection[str]] = "all",
+        allowed_special: Union[Literal["all"], AbstractSet[str]] | NotGiven = NOT_GIVEN,
+        disallowed_special: Union[Literal["all"], Collection[str]] | NotGiven = NOT_GIVEN,
         **kwargs,
     ) -> TokenizeOutput:
         """chat api needs to be implemented by the model"""
@@ -172,16 +172,17 @@ class BaseGenerationModel(BaseModel, ABC):
         self,
         content: Union[str, Iterable[str], Iterable[GenerationMessageParam]],
         *,
-        allowed_special: Union[Literal["all"], AbstractSet[str]] = set(),
-        disallowed_special: Union[Literal["all"], Collection[str]] = "all",
+        allowed_special: Union[Literal["all"], AbstractSet[str]] | NotGiven = NOT_GIVEN,
+        disallowed_special: Union[Literal["all"], Collection[str]] | NotGiven = NOT_GIVEN,
         **kwargs,
     ) -> TokenizeOutput:
         """chat api needs to be implemented by the model"""
         res = await self.tokenize(
             content,
-            allowed_special=allowed_special,
-            disallowed_special=disallowed_special,
+            **filter_notgiven(
+                allowed_special=allowed_special,
+                disallowed_special=disallowed_special,
+            ),
             **kwargs,
         )
         return res
-
