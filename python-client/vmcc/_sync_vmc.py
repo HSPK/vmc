@@ -265,7 +265,7 @@ class SyncVMC:
 
     def rerank(
         self,
-        sentences: List[List[str]],
+        content: List[List[str]],
         *,
         model: str,
         apply_softmax: bool | NotGiven = NOT_GIVEN,
@@ -276,7 +276,7 @@ class SyncVMC:
             "rerank",
             body=filter_not_given(
                 {
-                    "sentences": sentences,
+                    "content": content,
                     "model": model,
                     "apply_softmax": apply_softmax,
                     **kwargs,

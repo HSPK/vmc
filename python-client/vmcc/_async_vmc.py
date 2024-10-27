@@ -140,7 +140,7 @@ class AsyncVMC:
             "generate",
             body=filter_not_given(
                 {
-                    "content": self._process_prompt(content),
+                    "content": await self._process_prompt(content),
                     "model": self._default_model,
                     "frequency_penalty": frequency_penalty,
                     "logit_bias": logit_bias,
@@ -202,7 +202,7 @@ class AsyncVMC:
             "generate",
             body=filter_not_given(
                 {
-                    "content": self._process_prompt(content),
+                    "content": await self._process_prompt(content),
                     "model": self._default_model,
                     "frequency_penalty": frequency_penalty,
                     "logit_bias": logit_bias,
@@ -265,7 +265,7 @@ class AsyncVMC:
 
     async def rerank(
         self,
-        sentences: List[List[str]],
+        content: List[List[str]],
         *,
         model: str,
         apply_softmax: bool | NotGiven = NOT_GIVEN,
@@ -276,7 +276,7 @@ class AsyncVMC:
             "rerank",
             body=filter_not_given(
                 {
-                    "sentences": sentences,
+                    "content": content,
                     "model": model,
                     "apply_softmax": apply_softmax,
                     **kwargs,

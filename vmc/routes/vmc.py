@@ -61,7 +61,7 @@ async def embedding(params: EmbeddingParams):
 @router.post("/rerank")
 async def rerank(params: RerankParams):
     model: BaseRerankModel = await vmm.get(params["model"], "reranker")
-    return await model._rerank(remove_keys(params, {"model"}))
+    return await model._rerank(**remove_keys(params, {"model"}))
 
 
 @router.get("/models")
