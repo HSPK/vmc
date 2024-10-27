@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "vmcc"
+name = "vmc-client"
 packages = [{ include = "vmcc", from = "." }]
 version = "0.0.1"
 description = ""
