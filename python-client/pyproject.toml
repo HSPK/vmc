@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "vmcc"
 packages = [{ include = "vmcc", from = "." }]
-version = "2.1.1"
+version = "0.0.1"
 description = ""
 authors = ["HSPK <whxway@whu.edu.cn>"]
 readme = "README.md"
