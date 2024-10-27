@@ -1,0 +1,113 @@
+import asyncio
+import random
+import time
+from enum import Enum
+
+import vmc.models as api_module
+import vmc.models.local as local_module
+from vmc.serve.serve import is_serve_enabled
+from vmc.types.errors.errors import ManagerNotLoadedError
+from vmc.types.model_config import ModelConfig
+
+from .local import load_local_model
+
+
+class Algorithm(Enum):
+    RANDOM = "random"
+    ROUND_ROBIN = "round_robin"
+    LEAST_BUSY = "least_busy"
+    PRIORITY = "priority"
+    BUDGET = "budget"
+
+
+class RateLimiter:
+    def __init__(self, rate: int, period: int):
+        self.rate = rate
+        self.period = period
+        self._count = 0
+        self._last = time.time()
+        self.next_available_wait_time = 0
+
+    def __call__(self):
+        if self.rate == 0 or self.period == 0:
+            return True
+        now = time.time()
+        if now - self._last > self.period:
+            self._count = 0
+            self._last = now
+        if self._count < self.rate:
+            self._count += 1
+            return True
+        self.next_available_wait_time = self.period - (now - self._last)
+        return False
+
+
+class PhysicalModel:
+    def __init__(
+        self,
+        model: ModelConfig,
+        credentials: list[dict],
+        rate: int = 0,
+        period: int = 0,
+        priority: int = 0,
+        budget: int = 0,
+        physical: bool = False,
+    ):
+        self.model = model
+        self.ratelimiter = RateLimiter(rate, period)
+        self.credentials = credentials
+        self.priority = priority
+        self.budget = budget
+        self._model = None
+        self.physical = physical
+
+    async def load(self):
+        if self.model.is_local:
+            if not is_serve_enabled():
+                raise ManagerNotLoadedError(msg="Serve is not enabled")
+            if self.physical:
+                self._model = getattr(local_module, self.model.model_class)(
+                    **{**self.model.init_kwargs, "config": self.model}
+                )
+            else:
+                self._model = await load_local_model(self.model)
+        else:
+            self._model = getattr(api_module, self.model.model_class)(
+                **{"credentials": self.credentials, **self.model.init_kwargs, "config": self.model}
+            )
+
+    def alive(self):
+        return self._model is not None
+
+    def __getattr__(self, name):
+        async def wrapper(*args, **kwargs):
+            if not self.alive():
+                await self.load()
+            if not self.ratelimiter():
+                await asyncio.sleep(self.ratelimiter.next_available_wait_time)
+            return await getattr(self._model, name)(*args, **kwargs)
+
+        return wrapper
+
+
+class VirtualModel:
+    def __init__(self, models: list[PhysicalModel], algorithm: Algorithm = Algorithm.ROUND_ROBIN):
+        self.models = models
+        self.algorithm = algorithm
+        self.index = 0
+
+    def choose(self):
+        if self.algorithm == Algorithm.RANDOM:
+            return random.choice(self.models)
+        if self.algorithm == Algorithm.ROUND_ROBIN:
+            return self.models[self.index]
+        if self.algorithm == Algorithm.LEAST_BUSY:
+            return min(self.models, key=lambda m: m.ratelimiter._count)
+        if self.algorithm == Algorithm.PRIORITY:
+            return max(self.models, key=lambda m: m.priority)
+        if self.algorithm == Algorithm.BUDGET:
+            return max(self.models, key=lambda m: m.budget)
+
+    def __getattr__(self, name):
+        model = self.choose()
+        return getattr(model, name)

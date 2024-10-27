@@ -1,0 +1,66 @@
+services:
+  db:
+    image: mongo:6.0
+    restart: always
+    user: root
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-vmc}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASS:-vmc.123}
+    ports:
+      - "127.0.0.1:${MONGODB_PORT:-27017}:27017"
+    volumes:
+      - mongodbdata:/data/db
+
+  server:
+    image: vmc:latest
+    restart: always
+    runtime: nvidia
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      - CONFIG_PATH=${CONFIG_PATH:-configs/config.yaml}
+    env_file:
+      - .env.server
+    command: ["ms", "start"]
+    volumes:
+      - ${LOCAL_MODEL_PATH:-/storage/raid5/models}:/models
+      - ${UPLOAD_PATH:-./uploads}:/uploads
+    ports:
+      - "127.0.0.1:${VMC_PORT:-8888}:8888"
+
+  dashboard:
+    image: vmc:latest
+    restart: always
+    runtime: nvidia
+    environment:
+      - CONFIG_PATH=${CONFIG_PATH:-configs/config.yaml}
+    env_file:
+      - .env.server
+    command: ["python", "vmc/dashboard.py"]
+    depends_on:
+      - db
+      - server
+    ports:
+      - "127.0.0.1:${VMC_DASHBOARD_PORT:-34213}:7860"
+
+  manager:
+    image: vmc:latest
+    restart: always
+    runtime: nvidia
+    environment:
+      - CONFIG_PATH=${CONFIG_PATH:-configs/config.yaml}
+    env_file:
+      - .env.server
+    depends_on:
+      - db
+      - server
+    command: ["ms", "manager", "start"]
+    ports:
+      - "127.0.0.1:${VMC_MANAGER_PORT:-34212}:7861"
+    volumes:
+      - ${LOCAL_MODEL_PATH:-/storage/raid5/models}:/models
+      - ${UPLOAD_PATH:-./uploads}:/uploads
+
+volumes:
+  mongodbdata:

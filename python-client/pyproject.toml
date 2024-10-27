@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "vmcc"
+packages = [{ include = "vmcc", from = "." }]
+version = "2.1.1"
+description = ""
+authors = ["HSPK <whxway@whu.edu.cn>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+httpx = "^0.27.2"
+pydantic = ">2"
+loguru = "^0.7.2"
+
+
+[tool.poetry.group.test.dependencies]
+ipykernel = "^6.29.5"
+pdoc = "^14.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
