@@ -79,6 +79,17 @@ class PhysicalModel:
     def alive(self):
         return self._model is not None
 
+    async def offload(self):
+        if not self.alive():
+            return
+        if self.physical:
+            del self._model
+            from vmc.utils.utils import torch_gc
+
+            torch_gc()
+        else:
+            self._model = None
+
     def __getattr__(self, name):
         async def wrapper(*args, **kwargs):
             if not self.alive():

@@ -20,24 +20,21 @@ if is_serve_enabled():
 class TransformerEmbedding(BaseEmbeddingModel):
     def __init__(
         self,
-        torch_dtype: Literal["float16", "float32", "float64", "bfloat16"] = "bfloat16",
+        backend: Literal["torch", "onnx", "openvino"] = "torch",
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         if torch.backends.mps.is_available():
-            self.device = "mps"
+            self.device = torch.device("mps")
         elif torch.cuda.is_available():
-            self.device = "cuda"
+            self.device = torch.device("cuda")
         else:
-            self.device = "cpu"
-        torch_dtype = {
-            "float16": torch.float16,
-            "float32": torch.float32,
-            "float64": torch.float64,
-            "bfloat16": torch.bfloat16,
-        }[torch_dtype]
-        self.model = SentenceTransformer(self.model_id, trust_remote_code=True).to(self.device)
+            self.device = torch.device("cpu")
+        logger.debug(f"Using device: {self.device}")
+        self.model = SentenceTransformer(
+            self.model_id, trust_remote_code=True, device=self.device, backend=backend
+        )
         self.model.eval()
 
     async def embedding(
@@ -61,7 +58,7 @@ class TransformerEmbedding(BaseEmbeddingModel):
         ).tolist()
         torch_gc()
         return EmbeddingResponse(
-            embeddings=embeddings,
+            embedding=embeddings,
             created=created,
             embed_time=time.time() - created,
             model=self.model_id,

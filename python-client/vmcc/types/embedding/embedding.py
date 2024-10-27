@@ -38,7 +38,7 @@ class EmbeddingResponse(BaseOutput):
     object: Literal["embedding"] = "embedding"
     """The object type, which is always "list"."""
 
-    cost: Cost
+    cost: Cost | None = None
     """The usage information for the request."""
     
     original_response: dict | None = None

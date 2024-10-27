@@ -70,6 +70,8 @@ class VirtualModelManager:
         model_id: str | None = None,
         method: Literal["config", "tf", "ollama", "vllm"] = "config",
         type: Literal["chat", "embedding", "audio", "reranker"] = "chat",
+        backend: Literal["torch", "onnx", "openvino"] = "torch",
+        device_map_auto: bool = False,
     ):
         model_id = model_id or name
         if method == "config":
@@ -84,8 +86,32 @@ class VirtualModelManager:
             obj = cls(model_configs, credentials)
             await obj.load(_id, physical=True)
             return obj
+        elif method == "tf":
+            assert type != "audio", "audio model is not supported"
+            model_class = {
+                "chat": "TransformerGeneration",
+                "embedding": "TransformerEmbedding",
+                "reranker": "TransformerReranker",
+            }[type]
+            init_kwargs = {"model_id": model_id}
+            if type == "embedding":
+                init_kwargs["backend"] = backend
+            if type == "chat":
+                init_kwargs["device_map"] = "auto" if device_map_auto else None
+            model_config = ModelConfig(
+                name=name,
+                model_class=model_class,
+                init_kwargs=init_kwargs,
+                type=type,
+                is_local=True,
+            )
+            model_configs = {uniform(f"{type}/{name}"): model_config}
+            credentials = {uniform(f"{type}/{name}"): []}
+            obj = cls(model_configs, credentials)
+            await obj.load(f"{type}/{name}", physical=True)
+            return obj
         else:
-            raise NotImplementedError("method not supported")
+            raise ValueError(f"method {method} not supported")
 
     @property
     def models(self):
@@ -142,3 +168,11 @@ class VirtualModelManager:
             await model.load()
         self.loaded_models[id] = model
         return self.loaded_models[id]
+
+    async def offload(self, id: str, type: Literal["chat", "embedding", "audio", "reranker"]):
+        """Offload a virtual model by id."""
+        id = uniform(f"{type}/{id}")
+        if id not in self.loaded_models:
+            raise ModelNotFoundError(msg=f"{id} not found")
+        await self.loaded_models[id].offload()
+        del self.loaded_models[id]

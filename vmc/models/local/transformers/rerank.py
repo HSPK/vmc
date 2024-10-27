@@ -7,13 +7,20 @@ from vmc.utils.utils import torch_gc
 from ...rerank import BaseRerankModel
 
 if is_serve_enabled():
+    import torch
     from sentence_transformers import CrossEncoder
 
 
 class TransformerReranker(BaseRerankModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.model = CrossEncoder(self.model_id, device="cuda")
+        if torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+        elif torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device = torch.device("cpu")
+        self.model = CrossEncoder(self.model_id, device=self.device)
 
     async def rerank(
         self,

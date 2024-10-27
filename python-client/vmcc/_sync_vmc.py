@@ -134,7 +134,7 @@ class SyncVMC:
         top_p: Optional[float] | NotGiven = NOT_GIVEN,
         user: str | NotGiven = NOT_GIVEN,
         timeout: float | httpx.Timeout | None = None,
-        return_original_response: bool = False,
+        return_original_response: bool | NotGiven = NOT_GIVEN,
         **kwargs,
     ) -> Generation:
         return self._post(
@@ -196,7 +196,7 @@ class SyncVMC:
         top_p: Optional[float] | NotGiven = NOT_GIVEN,
         user: str | NotGiven = NOT_GIVEN,
         timeout: float | httpx.Timeout | None = None,
-        return_original_response: bool = False,
+        return_original_response: bool | NotGiven = NOT_GIVEN,
         **kwargs,
     ):
         return self._stream(

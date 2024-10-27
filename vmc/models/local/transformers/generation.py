@@ -50,11 +50,11 @@ class TransformerGeneration(BaseGenerationModel):
     ):
         super().__init__(*args, **kwargs)
         if torch.backends.mps.is_available():
-            self.device = "mps"
+            self.device = torch.device("mps")
         elif torch.cuda.is_available():
-            self.device = "cuda"
+            self.device = torch.device("cuda")
         else:
-            self.device = "cpu"
+            self.device = torch.device("cpu")
         torch_dtype = {
             "float16": torch.float16,
             "float32": torch.float32,
@@ -72,7 +72,7 @@ class TransformerGeneration(BaseGenerationModel):
             )
         if device_map is None:
             self.model.to(self.device)
-        self.tokenizer = AutoTokenizer.from_pretrained(self.config.model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_id, trust_remote_code=True)
         self.max_length = max_length
 
     def prepare_input_chat_template(self, content: Union[str, Iterable[GenerationMessageParam]]):
@@ -123,7 +123,7 @@ class TransformerGeneration(BaseGenerationModel):
         else:
             finish_reason = "stop"
         return Generation(
-            id=f"{self.model_id}-{str(uuid.uuid4())}",
+            id=f"{self.config.name}-{str(uuid.uuid4())}",
             choices=[
                 Choice(
                     finish_reason=finish_reason,
@@ -181,7 +181,7 @@ class TransformerGeneration(BaseGenerationModel):
         }
         thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
         thread.start()
-        id = f"{self.model_id}-{str(uuid.uuid4())}"
+        id = f"{self.config.name}-{str(uuid.uuid4())}"
 
         for new_text in streamer:
             yield GenerationChunk(

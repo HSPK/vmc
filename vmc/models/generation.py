@@ -55,7 +55,7 @@ class BaseGenerationModel(BaseModel, ABC):
         top_p: Optional[float] | NotGiven = NOT_GIVEN,
         user: str | NotGiven = NOT_GIVEN,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-        return_original_response: bool = False,
+        return_original_response: bool | NotGiven = NOT_GIVEN,
         **kwargs,
     ) -> Generation:
         raise NotImplementedError(f"Chat method not implemented for {self.__class__.__name__}")
@@ -84,7 +84,7 @@ class BaseGenerationModel(BaseModel, ABC):
         top_p: Optional[float] | NotGiven = NOT_GIVEN,
         user: str | NotGiven = NOT_GIVEN,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-        return_original_response: bool = False,
+        return_original_response: bool | NotGiven = NOT_GIVEN,
         stream: bool = False,
         **kwargs,
     ) -> AsyncGenerator[GenerationChunk, None]:
@@ -114,7 +114,7 @@ class BaseGenerationModel(BaseModel, ABC):
         top_p: Optional[float] | NotGiven = NOT_GIVEN,
         user: str | NotGiven = NOT_GIVEN,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-        return_original_response: bool = False,
+        return_original_response: bool | NotGiven = NOT_GIVEN,
         stream: bool = False,
         **kwargs,
     ) -> Union[Generation, AsyncGenerator[Generation, None]]:

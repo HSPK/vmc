@@ -1,7 +1,6 @@
 import json
 import os
 from contextlib import asynccontextmanager
-from typing import Literal
 
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
@@ -22,6 +21,10 @@ def create_app():
     model_id = os.getenv("SERVE_MODEL_ID")
     method = os.getenv("SERVE_METHOD", "config")
     type = os.getenv("SERVE_TYPE", "chat")
+    backend = os.getenv("SERVE_BACKEND", "torch")
+    device_map_auto = os.getenv("SERVE_DEVICE_MAP_AUTO", "False")
+    device_map_auto = device_map_auto.lower() == "true"
+
     assert name, "SERVE_NAME is not set"
     if not model_id:
         model_id = name
@@ -30,18 +33,23 @@ def create_app():
     async def lifespan(app: FastAPI):
         import rich
 
-        from vmc.virtual import vmm
+        from vmc.virtual import set_vmm, vmm
         from vmc.virtual.manager import VirtualModelManager
 
-        rich.print(f"Loading {name} using {method}")
-        vmm = await VirtualModelManager.from_serve(
-            name=name,
-            model_id=model_id,
-            method=method,
-            type=type,
+        rich.print(f"✅ {type}/{name} loading({method})...")
+        set_vmm(
+            await VirtualModelManager.from_serve(
+                name=name,
+                model_id=model_id,
+                method=method,
+                type=type,
+                backend=backend,
+                device_map_auto=device_map_auto,
+            )
         )
-        rich.print(f"{name} loaded")
         yield
+        rich.print(f"❌ {type}/{name} unloading...")
+        await vmm.offload(name, type=type)
 
     app = FastAPI(lifespan=lifespan)
     app.add_middleware(

@@ -24,14 +24,20 @@ def manager():
 @click.option("--host", default="localhost")
 @click.option("--port", default=8100)
 @click.option("--api-key", default=None)
+@click.option("--debug", is_flag=True)
+@click.option("--backend", default="torch")
+@click.option("--device-map-auto", is_flag=True)
 def serve(
     name: str,
     model_id: str,
     method: Literal["config", "tf", "vllm", "ollama"],
     type: Literal["chat", "embedding", "audio", "reranker"],
+    backend: Literal["torch", "onnx", "openvino"],
     host: str,
     port: int,
     api_key: str,
+    debug: bool,
+    device_map_auto: bool,
 ):
     if model_id is None:
         model_id = name
@@ -41,20 +47,35 @@ def serve(
     os.environ["SERVE_MODEL_ID"] = model_id
     os.environ["SERVE_METHOD"] = method
     os.environ["SERVE_TYPE"] = type
+    os.environ["SERVE_BACKEND"] = backend
+    os.environ["SERVE_DEVICE_MAP_AUTO"] = str(device_map_auto)
+
     if api_key:
         os.environ["SERVE_API_KEY"] = api_key
-    cmd = [
-        "gunicorn",
-        "-b",
-        f"{host}:{port}",
-        "-k",
-        "uvicorn.workers.UvicornWorker",
-        "--log-level",
-        "info",
-        "--timeout",
-        "300",
-        "vmc.serve_server:create_app",
-    ]
+    if debug:
+        cmd = [
+            "uvicorn",
+            "vmc.serve_server:create_app",
+            "--reload",
+            "--host",
+            host,
+            "--port",
+            str(port),
+        ]
+    else:
+        cmd = [
+            "gunicorn",
+            "-b",
+            f"{host}:{port}",
+            "-k",
+            "uvicorn.workers.UvicornWorker",
+            "--log-level",
+            "info",
+            "--timeout",
+            "300",
+            # "--factory",
+            "vmc.serve_server:create_app",
+        ]
     cmd = " ".join(cmd)
     from rich import print
 
