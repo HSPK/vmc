@@ -18,7 +18,7 @@ from vmc.types.embedding import EmbeddingParams as VMCEmbeddingParams
 from vmc.types.generation import GenerationParams
 from vmc.virtual import vmm
 
-router = APIRouter()
+router = APIRouter(prefix="/v1")
 
 
 def remove_keys(d: dict, keys: set):
@@ -39,7 +39,7 @@ def adapt_embedding_params(params: EmbeddingCreateParams) -> VMCEmbeddingParams:
 
 async def _stream_generator(params: GenerationParams):
     try:
-        model = await vmm.get(params["model"])
+        model = await vmm.get(params["model"], type="chat")
         async for token in await model._generate(**remove_keys(params, {"model"})):
             chunk = restore_completion_chunk(token)
             yield f"data: {chunk.model_dump_json()}\n\n"
@@ -49,7 +49,7 @@ async def _stream_generator(params: GenerationParams):
         return
 
 
-@router.post("/v1/chat/completions")
+@router.post("/chat/completions")
 async def chat_completion(req: CompletionCreateParams):
     params = adapt_completion_params(req)
     if params.get("stream", False):
@@ -59,13 +59,13 @@ async def chat_completion(req: CompletionCreateParams):
             headers={"X-Accel-Buffering": "no"},
         )
 
-    model = await vmm.get(params["model"])
+    model = await vmm.get(params["model"], type="chat")
 
     res = await model._generate(**remove_keys(params, {"model"}))
     return restore_completion(res)
 
 
-@router.post("/v1/audio/transcriptions")
+@router.post("/audio/transcriptions")
 async def transciption(
     file: Annotated[UploadFile, File()],
     model: Annotated[str, Form()],
@@ -76,19 +76,19 @@ async def transciption(
         file=await file.read(), model=model, language=language, temperature=temperature
     )
     logger.info(f"transcription request: {req['model']}, {file.filename}")
-    model: BaseAudioModel = await vmm.get(model)
+    model: BaseAudioModel = await vmm.get(model, type="audio")
     return model._transcribe(**req)
 
 
-@router.post("/v1/embeddings")
+@router.post("/embeddings")
 async def embeddings(req: EmbeddingCreateParams):
     params = adapt_embedding_params(req)
-    model = await vmm.get(params["model"])
+    model = await vmm.get(params["model"], type="embedding")
     embedding = await model._embedding(**remove_keys(params, {"model"}))
     return restore_embedding(embedding)
 
 
-@router.get("/v1/models")
+@router.get("/models")
 async def model():
     return {
         "object": "list",

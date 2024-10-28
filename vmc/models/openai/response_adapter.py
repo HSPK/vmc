@@ -131,6 +131,14 @@ def restore_completion_chunk(generation_chunk: GenerationChunk):
     )
 
 
+def decode_openai_embedding_base64(s):
+    import base64
+
+    import numpy as np
+
+    return np.frombuffer(base64.b64decode(s), dtype=np.float32).tolist()
+
+
 def adapt_embedding(
     embedding: CreateEmbeddingResponse,
     pricing: Pricing,
@@ -141,7 +149,10 @@ def adapt_embedding(
     end_time = time.time() if end_time is None else end_time
     return EmbeddingResponse(
         created=created,
-        embedding=[e.embedding for e in embedding.data],
+        embedding=[
+            decode_openai_embedding_base64(e.embedding) if isinstance(e.embedding, str) else e
+            for e in embedding.data
+        ],
         embed_time=end_time - created,
         model=embedding.model,
         cost=compute_embedding_cost(pricing, embedding.usage.prompt_tokens),
