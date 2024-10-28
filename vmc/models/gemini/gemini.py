@@ -15,6 +15,8 @@ from google.generativeai.types.content_types import ContentsType
 from google.generativeai.types.generation_types import GenerationConfigType
 from loguru import logger
 
+from vmc.models.embedding import BaseEmbeddingModel
+from vmc.models.generation import BaseGenerationModel
 from vmc.types import NOT_GIVEN, NotGiven
 from vmc.types.embedding import EmbeddingResponse
 from vmc.types.errors.errors import BadParamsError
@@ -26,8 +28,6 @@ from vmc.types.generation.tokenize import TokenizeOutput
 from vmc.types.generation.tool_param import ChatCompletionToolParam
 from vmc.utils.proxy import use_proxy
 
-from ..embedding import BaseEmbeddingModel
-from ..generation import BaseGenerationModel
 from .response_adapter import adapt_generation, adapt_generation_chunk, gen_generation_id
 
 

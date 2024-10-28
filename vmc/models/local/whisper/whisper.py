@@ -1,13 +1,13 @@
 from openai.types.audio.transcription_create_params import TranscriptionCreateParams
 
+from vmc.models.audio import BaseAudioModel
 from vmc.serve import is_serve_enabled
 from vmc.types.audio import Transcription
-
-from ...audio import BaseAudioModel
 
 if is_serve_enabled():
     import torch
     from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
+
 
 class Whisper(BaseAudioModel):
     model_id: str
@@ -15,15 +15,13 @@ class Whisper(BaseAudioModel):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
+
         from transformers import pipeline
 
         model = AutoModelForSpeechSeq2Seq.from_pretrained(
             self.model_id, torch_dtype=torch.float16, trust_remote_code=True
         ).cuda()
-        processer = AutoProcessor.from_pretrained(
-            self.model_id, trust_remote_code=True
-        )
+        processer = AutoProcessor.from_pretrained(self.model_id, trust_remote_code=True)
         self.pipeline = pipeline(
             "automatic-speech-recognition",
             model=model,

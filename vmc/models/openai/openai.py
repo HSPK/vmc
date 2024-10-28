@@ -26,14 +26,14 @@ from openai.types.chat.chat_completion_tool_choice_option_param import (
 from openai.types.chat.chat_completion_tool_param import ChatCompletionToolParam
 from openai.types.chat_model import ChatModel
 
+from vmc.models.embedding import BaseEmbeddingModel
+from vmc.models.generation import BaseGenerationModel
 from vmc.types import NOT_GIVEN, NotGiven
 from vmc.types.embedding import EmbeddingResponse
 from vmc.types.errors.errors import ModelNotFoundError
 from vmc.types.generation import Generation, GenerationChunk, TokenizeOutput
 from vmc.types.generation.message_params import GenerationMessageParam
 
-from ..embedding import BaseEmbeddingModel
-from ..generation import BaseGenerationModel
 from .response_adapter import adapt_completion, adapt_completion_chunk, adapt_embedding
 
 

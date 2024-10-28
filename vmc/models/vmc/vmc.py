@@ -4,15 +4,14 @@ import requests
 from openai.types.audio.transcription_create_params import TranscriptionCreateParams
 from vmcc import VMC
 
+from vmc.models.audio import BaseAudioModel
+from vmc.models.embedding import BaseEmbeddingModel
+from vmc.models.generation import BaseGenerationModel
+from vmc.models.rerank import BaseRerankModel
 from vmc.types.audio import Transcription
 from vmc.types.embedding import EmbeddingResponse
 from vmc.types.generation import ContentType, Generation, GenerationChunk
 from vmc.types.rerank import RerankOutput
-
-from ..audio import BaseAudioModel
-from ..embedding import BaseEmbeddingModel
-from ..generation import BaseGenerationModel
-from ..rerank import BaseRerankModel
 
 
 class VMCModel(BaseGenerationModel, BaseAudioModel, BaseRerankModel, BaseEmbeddingModel):
