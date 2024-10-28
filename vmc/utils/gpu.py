@@ -1,4 +1,3 @@
-import hashlib
 import subprocess
 
 import numpy as np
@@ -27,19 +26,3 @@ def torch_gc():
         gc.collect()
         torch.cuda.empty_cache()
         torch.cuda.ipc_collect()
-
-
-def hash_password(password: str):
-    """
-    Hash a password"""
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
-
-
-def find_available_port():
-    import socket
-
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(("", 0))
-    port = s.getsockname()[1]
-    s.close()
-    return port

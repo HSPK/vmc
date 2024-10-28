@@ -5,6 +5,7 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from openai.types.audio.transcription_create_params import TranscriptionCreateParams
 
+from vmc.db.storage import store_file
 from vmc.exception import exception_handler
 from vmc.models.local.whisper.whisper import BaseAudioModel
 from vmc.models.rerank import BaseRerankModel
@@ -15,7 +16,6 @@ from vmc.types.generation.tokenize_params import TokenizeParams
 from vmc.types.image.upload import ImageUploadOutput
 from vmc.types.models import ModelInfoOutput
 from vmc.types.rerank import RerankParams
-from vmc.utils.storage import store_file
 from vmc.virtual import vmm
 
 router = APIRouter()

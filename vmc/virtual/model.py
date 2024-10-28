@@ -84,7 +84,7 @@ class PhysicalModel:
             return
         if self.physical:
             del self._model
-            from vmc.utils.utils import torch_gc
+            from vmc.utils.gpu import torch_gc
 
             torch_gc()
         else:

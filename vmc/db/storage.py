@@ -7,6 +7,7 @@ from fastapi import File, UploadFile
 
 get_mongo_db = None
 
+
 def get_file_path(_id: str) -> str:
     item = get_mongo_db()["files"].find_one({"_id": _id})
     if not item:
