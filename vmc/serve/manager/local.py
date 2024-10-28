@@ -2,7 +2,7 @@ import os
 
 from vmcc import AsyncVMC
 
-from vmc.serve.interface import serve_model
+from vmc.serve.manager.client import serve_model
 from vmc.types.model_config import ModelConfig
 
 

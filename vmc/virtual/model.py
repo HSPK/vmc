@@ -5,11 +5,11 @@ from enum import Enum
 
 import vmc.models as api_module
 import vmc.models.local as local_module
-from vmc.serve.serve import is_serve_enabled
+from vmc.serve import is_serve_enabled
 from vmc.types.errors.errors import ManagerNotLoadedError
 from vmc.types.model_config import ModelConfig
 
-from .local import load_local_model
+from ..serve.manager.local import load_local_model
 
 
 class Algorithm(Enum):

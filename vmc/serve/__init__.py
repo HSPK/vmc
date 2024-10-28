@@ -1,3 +1,5 @@
-from .serve import is_serve_enabled
+import os
 
-__all__ = ["is_serve_enabled"]
+
+def is_serve_enabled():
+    return os.getenv("VMC_SERVE_ENABLED", "0") == "1"

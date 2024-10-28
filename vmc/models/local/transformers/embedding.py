@@ -30,7 +30,7 @@ class TransformerEmbedding(BaseEmbeddingModel):
             self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
-        logger.debug(f"Using device: {self.device}")
+        logger.debug(f"load {self.model_id} using device: {self.device}")
         self.model = SentenceTransformer(
             self.model_id, trust_remote_code=True, device=self.device, backend=backend
         )

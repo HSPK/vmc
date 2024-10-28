@@ -4,6 +4,8 @@ import click
 from dotenv import find_dotenv, load_dotenv
 from typing_extensions import Literal
 
+load_dotenv(find_dotenv())
+
 
 @click.group()
 @click.version_option()
@@ -42,7 +44,6 @@ def serve(
     if model_id is None:
         model_id = name
 
-    load_dotenv(find_dotenv())
     os.environ["SERVE_NAME"] = name
     os.environ["SERVE_MODEL_ID"] = model_id
     os.environ["SERVE_METHOD"] = method
@@ -55,7 +56,7 @@ def serve(
     if debug:
         cmd = [
             "uvicorn",
-            "vmc.serve_server:create_app",
+            "vmc.serve.server:create_app",
             "--reload",
             "--host",
             host,
@@ -74,7 +75,7 @@ def serve(
             "--timeout",
             "300",
             # "--factory",
-            "vmc.serve_server:create_app",
+            "vmc.serve.server:create_app",
         ]
     cmd = " ".join(cmd)
     from rich import print
@@ -142,11 +143,6 @@ def stop_dashboard(config_path: str | None, port: int | None = None):
 @click.option("--port", "-p", default=None)
 @click.option("--reload", is_flag=True)
 def start_server(detach: bool = False, port: int | None = None, reload: bool = False):
-    import os
-
-    from dotenv import find_dotenv, load_dotenv
-
-    load_dotenv(find_dotenv())
     workers = os.getenv("VMC_WORKERS", 1)
     host = os.getenv("VMC_SERVER_HOST", "localhost")
     port = port or os.getenv("VMC_SERVER_PORT", 8000)

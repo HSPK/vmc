@@ -16,7 +16,7 @@ from typing_extensions import Literal
 
 from vmc.models.generation import BaseGenerationModel
 from vmc.models.utils import filter_notgiven
-from vmc.serve.serve import is_serve_enabled
+from vmc.serve import is_serve_enabled
 from vmc.types import NOT_GIVEN, NotGiven
 from vmc.types.generation.generation import ChatCompletionMessage, Choice, Generation
 from vmc.types.generation.generation_chunk import Choice as ChunkChoice

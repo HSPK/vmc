@@ -47,6 +47,8 @@ def create_app():
                 device_map_auto=device_map_auto,
             )
         )
+        rich.print(f"✅ {type}/{name} loaded({method})...")
+
         yield
         rich.print(f"❌ {type}/{name} unloading...")
         await vmm.offload(name, type=type)
