@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "vmc"
-version = "0.0.0"
+version = "0.0.1"
 description = "VMC(Virtual Model Collection) is a collection of virtual models for various tasks."
 authors = ["HSPK <whxway@whu.edu.cn>"]
 license = "MIT"
