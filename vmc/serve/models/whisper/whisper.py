@@ -1,12 +1,9 @@
+import torch
 from openai.types.audio.transcription_create_params import TranscriptionCreateParams
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 
 from vmc.models.audio import BaseAudioModel
-from vmc.serve import is_serve_enabled
 from vmc.types.audio import Transcription
-
-if is_serve_enabled():
-    import torch
-    from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 
 
 class Whisper(BaseAudioModel):

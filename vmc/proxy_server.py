@@ -1,9 +1,12 @@
 import json
 
+import httpx
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from starlette.background import BackgroundTask
 
 from vmc.exception import exception_handler
 from vmc.routes import openai, vmc
@@ -45,6 +48,21 @@ async def handle_exception(request: Request, exc: Exception):
 @app.middleware("http")
 async def validate_token(request: Request, call_next):
     return await call_next(request)
+
+
+@app.middleware("http")
+async def forward_vmc_request(request: Request, call_next):
+    async with httpx.AsyncClient("http://localhost:8100") as client:
+        url = httpx.URL(request.url.path, query=request.url.query.encode("utf-8"))
+        headers = [(k, v) for k, v in request.headers.raw if k != b"host"]
+        req = client.build_request(request.method, url, headers=headers, content=request.stream())
+        r = await client.send(req)
+        return StreamingResponse(
+            r.iter_raw(),
+            status_code=r.status_code,
+            headers=r.headers,
+            background=BackgroundTask(r.close),
+        )
 
 
 app.include_router(openai.router)

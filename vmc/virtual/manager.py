@@ -1,7 +1,7 @@
 from typing_extensions import Literal
 
 import vmc.models as api_module
-import vmc.models.local as local_module
+import vmc.serve.models as serve_module
 from vmc.models import ModelType
 from vmc.types.errors import GroupExistsError, GroupNotFoundError, ModelNotFoundError
 from vmc.types.model_config import ModelConfig, ProviderConfig, Providers
@@ -23,9 +23,9 @@ def validate_models(providers: list[ProviderConfig]):
                 id_ = f"{p.provider_name}/{id_}"
                 if id_ in model_configs:
                     raise ValueError(f"model {id_} already exists")
-            if m.is_local and not hasattr(local_module, m.model_class):
+            if m.is_local and m.model_class not in serve_module.model_names:
                 raise ValueError(f"{m.model_class} not found in local models")
-            if not m.is_local and not hasattr(api_module, m.model_class):
+            if not m.is_local and m.model_class not in api_module.model_names:
                 raise ValueError(f"{m.model_class} not found in API models")
             model_configs[id_] = m
             credentials[id_] = p.credentials

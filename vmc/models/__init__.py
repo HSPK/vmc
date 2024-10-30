@@ -9,7 +9,7 @@ from .rerank import BaseRerankModel
 from .vmc.vmc import VMC
 
 ModelType = Union[BaseAudioModel, BaseEmbeddingModel, BaseGenerationModel, BaseRerankModel]
-
+model_names = ["VMC", "OpenAI", "Gemini"]
 __all__ = [
     "BaseAudioModel",
     "BaseEmbeddingModel",

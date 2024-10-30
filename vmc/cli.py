@@ -41,6 +41,9 @@ def serve(
     debug: bool,
     device_map_auto: bool,
 ):
+    from vmc.utils import check_vmc_serve_installed
+
+    assert check_vmc_serve_installed(), "vmc[serve] is not installed"
     if model_id is None:
         model_id = name
 

@@ -1,19 +1,16 @@
 import time
 from typing import Iterable, List, Union
 
+import torch
 from loguru import logger
+from sentence_transformers import SentenceTransformer
 from typing_extensions import Literal
 
 from vmc.models.embedding import BaseEmbeddingModel
 from vmc.models.utils import filter_notgiven
-from vmc.serve import is_serve_enabled
 from vmc.types._types import NOT_GIVEN, NotGiven
 from vmc.types.embedding import EmbeddingResponse
 from vmc.utils.gpu import torch_gc
-
-if is_serve_enabled():
-    import torch
-    from sentence_transformers import SentenceTransformer
 
 
 class TransformerEmbedding(BaseEmbeddingModel):

@@ -4,9 +4,6 @@ import time
 from enum import Enum
 
 import vmc.models as api_module
-import vmc.models.local as local_module
-from vmc.serve import is_serve_enabled
-from vmc.types.errors.errors import ManagerNotLoadedError
 from vmc.types.model_config import ModelConfig
 
 from ..serve.manager.local import load_local_model
@@ -63,10 +60,10 @@ class PhysicalModel:
 
     async def load(self):
         if self.model.is_local:
-            if not is_serve_enabled():
-                raise ManagerNotLoadedError(msg="Serve is not enabled")
             if self.physical:
-                self._model = getattr(local_module, self.model.model_class)(
+                from vmc.serve.models import modules
+
+                self._model = getattr(modules, self.model.model_class)(
                     **{**self.model.init_kwargs, "config": self.model}
                 )
             else:

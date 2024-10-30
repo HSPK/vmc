@@ -11,12 +11,19 @@ from typing import (
 )
 
 import httpx
+import torch
 from loguru import logger
+from transformers import (
+    AutoModel,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    PreTrainedModel,
+    TextIteratorStreamer,
+)
 from typing_extensions import Literal
 
 from vmc.models.generation import BaseGenerationModel
 from vmc.models.utils import filter_notgiven
-from vmc.serve import is_serve_enabled
 from vmc.types import NOT_GIVEN, NotGiven
 from vmc.types.generation.generation import ChatCompletionMessage, Choice, Generation
 from vmc.types.generation.generation_chunk import Choice as ChunkChoice
@@ -26,16 +33,6 @@ from vmc.types.generation.message_params import GenerationMessageParam
 from vmc.types.generation.tokenize import TokenizeOutput
 from vmc.types.generation.tool_choice_option_param import ChatCompletionToolChoiceOptionParam
 from vmc.types.generation.tool_param import ChatCompletionToolParam
-
-if is_serve_enabled():
-    import torch
-    from transformers import (
-        AutoModel,
-        AutoModelForCausalLM,
-        AutoTokenizer,
-        PreTrainedModel,
-        TextIteratorStreamer,
-    )
 
 
 class TransformerGeneration(BaseGenerationModel):

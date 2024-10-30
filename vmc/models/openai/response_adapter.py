@@ -150,7 +150,9 @@ def adapt_embedding(
     return EmbeddingResponse(
         created=created,
         embedding=[
-            decode_openai_embedding_base64(e.embedding) if isinstance(e.embedding, str) else e
+            decode_openai_embedding_base64(e.embedding)
+            if isinstance(e.embedding, str)
+            else e.embedding
             for e in embedding.data
         ],
         embed_time=end_time - created,

@@ -8,7 +8,7 @@ from openai.types.chat.completion_create_params import CompletionCreateParams
 from openai.types.embedding_create_params import EmbeddingCreateParams
 
 from vmc.exception import exception_handler
-from vmc.models.local.whisper.whisper import BaseAudioModel
+from vmc.models.audio import BaseAudioModel
 from vmc.models.openai.response_adapter import (
     restore_completion,
     restore_completion_chunk,

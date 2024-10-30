@@ -1,13 +1,11 @@
+import torch
+from sentence_transformers import CrossEncoder
+
 from vmc.models.rerank import BaseRerankModel
 from vmc.models.utils import filter_notgiven
-from vmc.serve import is_serve_enabled
 from vmc.types._types import NOT_GIVEN, NotGiven
 from vmc.types.rerank import RerankOutput
 from vmc.utils.gpu import torch_gc
-
-if is_serve_enabled():
-    import torch
-    from sentence_transformers import CrossEncoder
 
 
 class TransformerReranker(BaseRerankModel):

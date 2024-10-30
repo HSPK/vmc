@@ -7,7 +7,7 @@ from openai.types.audio.transcription_create_params import TranscriptionCreatePa
 
 from vmc.db.storage import store_file
 from vmc.exception import exception_handler
-from vmc.models.local.whisper.whisper import BaseAudioModel
+from vmc.models.audio import BaseAudioModel
 from vmc.models.rerank import BaseRerankModel
 from vmc.types._base import BaseOutput
 from vmc.types.embedding import EmbeddingParams
