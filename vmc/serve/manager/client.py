@@ -43,3 +43,11 @@ class MangerClient:
             return response.json()
         except Exception as e:
             raise ServeError(msg=str(e))
+
+    async def health(self):
+        try:
+            response = await self.client.get("/health")
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            raise ServeError(msg=str(e))

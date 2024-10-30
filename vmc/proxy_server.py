@@ -5,6 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
+from vmc.context.request import request as request_context
 from vmc.exception import exception_handler
 from vmc.routes import openai, vmc
 from vmc.types.errors._base import VMCException
@@ -44,6 +45,8 @@ async def handle_exception(request: Request, exc: Exception):
 
 @app.middleware("http")
 async def validate_token(request: Request, call_next):
+    request.scope["body"] = await request.body()
+    request_context.set(request)
     return await call_next(request)
 
 

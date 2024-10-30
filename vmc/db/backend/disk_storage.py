@@ -12,7 +12,7 @@ from vmc.db.storage import FileType, Metadata, Storage
 class DiskStorage(Storage):
     def __init__(self, storage_dir: str | None = None):
         if storage_dir is None:
-            storage_dir = os.getenv("STORAGE_DIR", "storage")
+            storage_dir = os.getenv("VMC_DISK_STORAGE_DIR", "storage")
         self.storage_dir = storage_dir
         os.makedirs(storage_dir, exist_ok=True)
         self.metadata_path = pjoin(storage_dir, "metadata.json")

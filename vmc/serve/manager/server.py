@@ -58,13 +58,14 @@ async def serve(params: ServeParams):
         "backend",
     ]
     for option in options:
-        if option in params:
+        if option in params and params[option]:
             command += [f"--{option.replace('_', '-')}", str(params[option])]
     if "device_map_auto" in params:
         command += ["--device-map-auto"]
     if params["name"] in started_processes:
         return BaseResponse(
-            StatusCode.SERVE_ERROR, msg=f"Model {params['name']} is already running"
+            port=started_processes[params["name"]]["params"]["port"],
+            pid=started_processes[params["name"]]["process"].pid,
         )
     try:
         logger.debug(f"Serving model {params['name']}")
@@ -101,7 +102,10 @@ async def serve(params: ServeParams):
         "params": params,
         "pid": process.pid,
     }
-    return BaseResponse()
+    return BaseResponse(
+        port=params["port"],
+        pid=process.pid,
+    )
 
 
 @app.post("/stop")
@@ -119,3 +123,8 @@ async def stop(params: StopParams):
 @app.get("/list")
 async def list_servers():
     return {k: {"params": v["params"], "pid": v["pid"]} for k, v in started_processes.items()}
+
+
+@app.get("/health")
+async def health():
+    return BaseResponse()

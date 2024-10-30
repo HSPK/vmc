@@ -24,7 +24,17 @@ class ModelConfig(BaseModel):
     knowledge_date: str | None = None
     port: int | None = None
     gpu_limit: int = 1
+
     is_local: bool = False
+
+    load_method: Literal["tf", "vllm", "ollama"] | None = None
+    """Use to specify the load method for local model"""
+
+    backend: Literal["torch", "onnx", "openvino"] = "torch"
+    """Local model backend"""
+
+    device_map_auto: bool = False
+    """Local model device map auto"""
 
     def dump(self):
         d = self.model_dump()
