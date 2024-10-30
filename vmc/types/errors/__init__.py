@@ -15,6 +15,7 @@ from .errors import (
     ModelNotFoundError,
     ModelNotStartedError,
     RateLimitError,
+    ServeError,
     VMCException,
 )
 from .message import ErrorMessage
@@ -41,4 +42,5 @@ __all__ = [
     "GroupExistsError",
     "GroupNotFoundError",
     "VMC_CODE",
+    "ServeError",
 ]

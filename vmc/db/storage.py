@@ -1,36 +1,34 @@
-import hashlib
-import os
-from os.path import join as pjoin
+from typing import TypeVar, Union
 
-import anyio
 from fastapi import File, UploadFile
+from typing_extensions import TypedDict
 
-get_mongo_db = None
-
-
-def get_file_path(_id: str) -> str:
-    item = get_mongo_db()["files"].find_one({"_id": _id})
-    if not item:
-        return None
-    return item["path"]
+FileType = TypeVar("FileType", bound=Union[File, UploadFile, str, bytes])
 
 
-async def store_file(file: UploadFile = File(...), *, return_path: bool = False) -> str:
-    file_content = await file.read()
-    md5 = hashlib.md5(file_content).hexdigest()
-    if get_mongo_db()["files"].find_one({"_id": md5}):
-        return md5
-    filetype = os.path.splitext(file.filename)[1]
-    path = anyio.Path(pjoin("upload", md5 + filetype))
-    await path.parent.mkdir(parents=True, exist_ok=True)
-    await path.write_bytes(file_content)
+class Metadata(TypedDict):
+    id: str
+    filename: str
+    filetype: str
+    filepath: str
+    created_at: float
+    updated_at: float
+    size: int
+    md5: str
 
-    get_mongo_db()["files"].insert_one(
-        {
-            "_id": md5,
-            "filename": file.filename,
-            "filetype": filetype,
-            "path": path.as_posix(),
-        }
-    )
-    return path.as_posix() if return_path else md5
+
+class Storage:
+    async def store(self, file: FileType) -> Metadata:
+        pass
+
+    async def get(self, key: str) -> Metadata:
+        pass
+
+    async def delete(self, key: str):
+        pass
+
+    async def list(self) -> list[Metadata]:
+        pass
+
+    async def update(self, key: str, file: FileType) -> Metadata:
+        pass

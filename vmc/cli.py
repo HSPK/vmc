@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 import click
 from dotenv import find_dotenv, load_dotenv
@@ -13,16 +14,11 @@ def cli():
     pass
 
 
-@cli.group()
-def manager():
-    pass
-
-
 @cli.command(name="serve")
 @click.argument("name")
 @click.option("--model-id", default=None)
 @click.option("--method", default="config")
-@click.option("--type", default="chat")
+@click.option("--type", default=None)
 @click.option("--host", default="localhost")
 @click.option("--port", default=8100)
 @click.option("--api-key", default=None)
@@ -41,16 +37,16 @@ def serve(
     debug: bool,
     device_map_auto: bool,
 ):
-    from vmc.utils import check_vmc_serve_installed
+    from vmc.serve import SERVER_FAILED_MSG
 
-    assert check_vmc_serve_installed(), "vmc[serve] is not installed"
     if model_id is None:
         model_id = name
 
     os.environ["SERVE_NAME"] = name
     os.environ["SERVE_MODEL_ID"] = model_id
     os.environ["SERVE_METHOD"] = method
-    os.environ["SERVE_TYPE"] = type
+    if type:
+        os.environ["SERVE_TYPE"] = type
     os.environ["SERVE_BACKEND"] = backend
     os.environ["SERVE_DEVICE_MAP_AUTO"] = str(device_map_auto)
 
@@ -80,20 +76,12 @@ def serve(
             # "--factory",
             "vmc.serve.server:create_app",
         ]
-    cmd = " ".join(cmd)
-    from rich import print
 
-    print(cmd)
-
-    ret = os.system(cmd)
-
-    if ret != 0:
-        print("Failed to start server")
-
-
-@cli.group()
-def dashboard():
-    pass
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"{SERVER_FAILED_MSG} {str(e)}")
+        exit(1)
 
 
 def get_last_commit_message():
@@ -113,39 +101,16 @@ def get_version():
     return importlib.metadata.version("vmc")
 
 
-@dashboard.command(name="start")
-@click.option("--config-path", default=None)
-@click.option("--detach", "-d", is_flag=True)
+@cli.command()
 @click.option("--port", "-p", default=8080)
-def start_dashboard(config_path: str, detach: bool, port: int):
-    import os
-
-    os.system(
-        f"gunicorn -b 127.0.0.1:{port} "
-        f"-k uvicorn.workers.UvicornWorker "
-        f"-e CONFIG_PATH={config_path} "
-        f"vmc.dashboard:demo {'-D' if detach else ''}"
-    )
-
-
-@dashboard.command(name="stop")
-@click.option("--config-path", default=None)
-@click.option("--port", "-p", default=None)
-def stop_dashboard(config_path: str | None, port: int | None = None):
-    import os
-
-    ret = os.system(f"kill -9 $(lsof -t -i:{port})")
-    if ret != 0:
-        print("Dashboard not running")
-    else:
-        print("Dashboard stopped")
+def dashboard(port: int):
+    pass
 
 
 @cli.command(name="start")
-@click.option("--detach", "-d", is_flag=True)
 @click.option("--port", "-p", default=None)
 @click.option("--reload", is_flag=True)
-def start_server(detach: bool = False, port: int | None = None, reload: bool = False):
+def start_server(port: int | None = None, reload: bool = False):
     workers = os.getenv("VMC_WORKERS", 1)
     host = os.getenv("VMC_SERVER_HOST", "localhost")
     port = port or os.getenv("VMC_SERVER_PORT", 8000)
@@ -155,32 +120,72 @@ def start_server(detach: bool = False, port: int | None = None, reload: bool = F
 
     print(f"[bold green]{title}[/bold green]\n{msg}")
     if not reload:
-        start_cmd = (
-            f"gunicorn -w {workers} -b {host}:{port} "
-            f"--worker-class uvicorn.workers.UvicornWorker "
-            f"--timeout 300 "
-            "--log-level info "
-            f"vmc.proxy_server:app {'-D' if detach else ''} "
-        )
+        cmd = [
+            "gunicorn",
+            "-w",
+            str(workers),
+            "-b",
+            f"{host}:{port}",
+            "--worker-class",
+            "uvicorn.workers.UvicornWorker",
+            "--timeout",
+            "300",
+            "--log-level",
+            "info",
+            "vmc.proxy_server:app",
+        ]
     else:
-        start_cmd = f"uvicorn vmc.proxy_server:app --reload --host {host} --port {port}"
-    print(start_cmd)
-    os.system(start_cmd)
+        cmd = [
+            "uvicorn",
+            "vmc.proxy_server:app",
+            "--reload",
+            "--host",
+            host,
+            "--port",
+            str(port),
+        ]
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as e:
+        print(e)
+        exit(1)
 
 
-@manager.command(name="start")
-@click.option("--config-path", default=None)
-@click.option("--detach", "-d", is_flag=True)
+@cli.command()
 @click.option("--host", default="localhost")
-@click.option("--port", default=9000)
-def start_manager(config_path: str, detach: bool, host: str, port: int):
-    import os
+@click.option("--port", default=8200)
+@click.option("--reload", is_flag=True)
+def manager(host: str, port: int, reload: bool):
+    import subprocess
 
-    os.system(
-        f"gunicorn -b {host}:{port} "
-        f"-k uvicorn.workers.UvicornWorker "
-        f"vmc.manager.app:app {'-D' if detach else ''}"
-    )
+    if not reload:
+        command = [
+            "gunicorn",
+            "-b",
+            f"{host}:{port}",
+            "-k",
+            "uvicorn.workers.UvicornWorker",
+            "--log-level",
+            "info",
+            "--timeout",
+            "300",
+            "vmc.serve.manager.server:app",
+        ]
+    else:
+        command = [
+            "uvicorn",
+            "vmc.serve.manager.server:app",
+            "--host",
+            host,
+            "--port",
+            str(port),
+            "--reload",
+        ]
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as e:
+        print(e)
+        exit(1)
 
 
 if __name__ == "__main__":

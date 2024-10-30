@@ -69,7 +69,7 @@ class VirtualModelManager:
         name: str,
         model_id: str | None = None,
         method: Literal["config", "tf", "ollama", "vllm"] = "config",
-        type: Literal["chat", "embedding", "audio", "reranker"] = "chat",
+        type: Literal["chat", "embedding", "audio", "reranker"] | None = None,
         backend: Literal["torch", "onnx", "openvino"] = "torch",
         device_map_auto: bool = False,
     ):
@@ -78,9 +78,17 @@ class VirtualModelManager:
             assert model_id == name, "model_id is not required for config method"
             providers = Providers.from_yaml(None).providers
             model_configs, credentials = validate_models(providers)
-            _id = uniform(f"{type}/{name}")
-            if _id not in model_configs:
-                raise ModelNotFoundError(msg=f"{_id} not found")
+            if type is None:
+                _id_candidates = [
+                    uniform(f"{t}/{name}") for t in ["chat", "embedding", "reranker", "audio"]
+                ]
+            else:
+                _id_candidates = [uniform(f"{type}/{name}")]
+            for _id in _id_candidates:
+                if _id in model_configs:
+                    break
+            else:
+                raise ModelNotFoundError(msg=f"{name} not found")
             model_configs = {_id: model_configs[_id]}
             credentials = {_id: credentials[_id]}
             obj = cls(model_configs, credentials)
@@ -169,10 +177,18 @@ class VirtualModelManager:
         self.loaded_models[id] = model
         return self.loaded_models[id]
 
-    async def offload(self, id: str, type: Literal["chat", "embedding", "audio", "reranker"]):
+    async def offload(
+        self, id: str, type: Literal["chat", "embedding", "audio", "reranker"] | None = None
+    ):
         """Offload a virtual model by id."""
-        id = uniform(f"{type}/{id}")
-        if id not in self.loaded_models:
+        if type is None:
+            _id_candidates = [
+                uniform(f"{t}/{id}") for t in ["chat", "embedding", "reranker", "audio"]
+            ]
+        for _id in _id_candidates:
+            if _id in self.loaded_models:
+                break
+        else:
             raise ModelNotFoundError(msg=f"{id} not found")
-        await self.loaded_models[id].offload()
-        del self.loaded_models[id]
+        await self.loaded_models[_id].offload()
+        del self.loaded_models[_id]

@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from openai.types.audio.transcription_create_params import TranscriptionCreateParams
 
-from vmc.db.storage import store_file
+from vmc.db import storage
 from vmc.exception import exception_handler
 from vmc.models.audio import BaseAudioModel
 from vmc.models.rerank import BaseRerankModel
@@ -83,8 +83,10 @@ async def transciption(
     language: Annotated[Optional[str], Form()] = None,
     temperature: Annotated[Optional[float], Form()] = None,
 ):
+    metadata = await storage.store(file)
+
     req = TranscriptionCreateParams(
-        file=await store_file(file, return_path=True),
+        file=metadata["filepath"],
         model=model,
         language=language,
         temperature=temperature,
@@ -96,7 +98,8 @@ async def transciption(
 
 @router.post("/image/upload")
 async def image_upload(file: UploadFile = File(...)):
-    return ImageUploadOutput(id=await store_file(file))
+    metadata = await storage.store(file)
+    return ImageUploadOutput(id=metadata["id"])
 
 
 @router.get("/alive")

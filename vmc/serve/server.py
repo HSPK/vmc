@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from vmc.exception import exception_handler
 from vmc.routes import openai, vmc
+from vmc.serve import SERVER_STARTED_MSG
 from vmc.types.errors._base import VMCException
 from vmc.types.errors.message import ErrorMessage
 from vmc.types.errors.status_code import HTTP_CODE as s
@@ -20,7 +21,7 @@ def create_app():
     name = os.getenv("SERVE_NAME")
     model_id = os.getenv("SERVE_MODEL_ID")
     method = os.getenv("SERVE_METHOD", "config")
-    type = os.getenv("SERVE_TYPE", "chat")
+    type = os.getenv("SERVE_TYPE")
     backend = os.getenv("SERVE_BACKEND", "torch")
     device_map_auto = os.getenv("SERVE_DEVICE_MAP_AUTO", "False")
     device_map_auto = device_map_auto.lower() == "true"
@@ -36,7 +37,7 @@ def create_app():
         from vmc.virtual import set_vmm, vmm
         from vmc.virtual.manager import VirtualModelManager
 
-        rich.print(f"✅ {type}/{name} loading({method})...")
+        rich.print(f"✅ {name} loading({method})...")
         set_vmm(
             await VirtualModelManager.from_serve(
                 name=name,
@@ -47,10 +48,10 @@ def create_app():
                 device_map_auto=device_map_auto,
             )
         )
-        rich.print(f"✅ {type}/{name} loaded({method})...")
-
+        rich.print(f"✅ {name} loaded({method})...")
+        rich.print(SERVER_STARTED_MSG)
         yield
-        rich.print(f"❌ {type}/{name} unloading...")
+        rich.print(f"❌ {name} unloading...")
         await vmm.offload(name, type=type)
 
     app = FastAPI(lifespan=lifespan)

@@ -198,3 +198,14 @@ class ManagerNotLoadedError(VMCException):
         **kwargs,
     ):
         super().__init__(http_code, vmc_code=vmc_code, msg=msg, **kwargs)
+
+
+class ServeError(VMCException):
+    def __init__(
+        self,
+        http_code: int = HTTP_CODE.INTERNAL_ERROR,
+        vmc_code: int = VMC_CODE.INTERNAL_ERROR,
+        msg: str = "Serve Error",
+        **kwargs,
+    ):
+        super().__init__(http_code, vmc_code=vmc_code, msg=msg, **kwargs)
