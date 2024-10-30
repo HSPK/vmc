@@ -10,7 +10,7 @@ def get_gpu_free_memory():
     return memory
 
 
-def get_freer_gpu(top_k=1, exclude_gpus=[]):
+def get_freer_gpus(top_k=1, exclude_gpus=[]):
     gpu_memory = get_gpu_free_memory()
     for i in exclude_gpus:
         gpu_memory[i] = -1

@@ -1,4 +1,5 @@
 import asyncio
+import os
 from contextlib import asynccontextmanager
 
 import psutil
@@ -43,6 +44,18 @@ app = FastAPI(lifespan=lifespan)
 
 @app.post("/serve")
 async def serve(params: ServeParams):
+    from vmc.utils import get_freer_gpus
+
+    envs = os.environ.copy()
+    if "gpu_limit" in params and params["gpu_limit"] > 0:
+        if params["gpu_limit"] > 1:
+            params["device_map_auto"] = True
+        gpus = get_freer_gpus(params["gpu_limit"])
+        if not gpus:
+            return BaseResponse(
+                code=StatusCode.SERVE_ERROR, msg="No free GPUs available"
+            ).to_response()
+        envs["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, gpus))
     command = [
         "vmc",
         "serve",
@@ -60,7 +73,7 @@ async def serve(params: ServeParams):
     for option in options:
         if option in params and params[option]:
             command += [f"--{option.replace('_', '-')}", str(params[option])]
-    if "device_map_auto" in params:
+    if "device_map_auto" in params and params["device_map_auto"]:
         command += ["--device-map-auto"]
     if params["name"] in started_processes:
         return BaseResponse(
@@ -68,12 +81,19 @@ async def serve(params: ServeParams):
             pid=started_processes[params["name"]]["process"].pid,
         )
     try:
-        logger.debug(f"Serving model {params['name']}")
-        process = await asyncio.create_subprocess_exec(
-            *command,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
+        logger.debug(f"Starting model {params['name']} with command: {' '.join(command)}")
+        os.makedirs("logs", exist_ok=True)
+        with open(f"logs/{params['name']}.log", "w") as f:
+            process = await asyncio.create_subprocess_exec(
+                *command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=f,
+                env=envs,
+            )
+    except Exception as e:
+        logger.error(f"Failed to create process: {e}")
+        return BaseResponse(code=StatusCode.SERVE_ERROR, msg=str(e)).to_response()
+    try:
         load_success = False
         output = ""
         while True:
@@ -112,7 +132,7 @@ async def serve(params: ServeParams):
 async def stop(params: StopParams):
     name = params["name"]
     if name not in started_processes:
-        return BaseResponse(StatusCode.STOP_ERROR, msg=f"Model {name} not found")
+        return BaseResponse(code=StatusCode.STOP_ERROR, msg=f"Model {name} not found")
     p = started_processes.pop(name)["process"]
     logger.debug(f"Killing model {name} with pid {p.pid}")
     killpg(p.pid)

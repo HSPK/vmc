@@ -9,7 +9,7 @@ from typing_extensions import Literal
 from vmc.models.embedding import BaseEmbeddingModel
 from vmc.models.utils import filter_notgiven
 from vmc.types._types import NOT_GIVEN, NotGiven
-from vmc.types.embedding import EmbeddingResponse
+from vmc.types.embedding.embedding import NO_COST, EmbeddingResponse
 from vmc.utils.gpu import torch_gc
 
 
@@ -58,4 +58,5 @@ class TransformerEmbedding(BaseEmbeddingModel):
             created=created,
             embed_time=time.time() - created,
             model=self.model_id,
+            cost=NO_COST,
         )

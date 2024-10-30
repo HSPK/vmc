@@ -3,14 +3,11 @@ import uuid
 from threading import Thread
 from typing import (
     AsyncGenerator,
-    Dict,
     Iterable,
-    List,
     Optional,
     Union,
 )
 
-import httpx
 import torch
 from loguru import logger
 from transformers import (
@@ -25,14 +22,17 @@ from typing_extensions import Literal
 from vmc.models.generation import BaseGenerationModel
 from vmc.models.utils import filter_notgiven
 from vmc.types import NOT_GIVEN, NotGiven
-from vmc.types.generation.generation import ChatCompletionMessage, Choice, Generation
+from vmc.types.generation.generation import (
+    ChatCompletionMessage,
+    Choice,
+    Generation,
+    GenerationCost,
+)
 from vmc.types.generation.generation_chunk import Choice as ChunkChoice
 from vmc.types.generation.generation_chunk import ChoiceDelta, GenerationChunk
-from vmc.types.generation.generation_params import ResponseFormat
 from vmc.types.generation.message_params import GenerationMessageParam
 from vmc.types.generation.tokenize import TokenizeOutput
-from vmc.types.generation.tool_choice_option_param import ChatCompletionToolChoiceOptionParam
-from vmc.types.generation.tool_param import ChatCompletionToolParam
+from vmc.types.pricing import Currency
 
 
 class TransformerGeneration(BaseGenerationModel):
@@ -41,7 +41,7 @@ class TransformerGeneration(BaseGenerationModel):
         model_class: Literal["AutoModel", "AutoModelForCausalLM"] = "AutoModelForCausalLM",
         torch_dtype: Literal["float16", "float32", "float64", "bfloat16"] = "bfloat16",
         max_length: Optional[int] = None,
-        device_map: Optional[str] = None,
+        device_map: Optional[bool] = None,
         *args,
         **kwargs,
     ):
@@ -131,41 +131,37 @@ class TransformerGeneration(BaseGenerationModel):
             created=created,
             generation_time=time.time() - created,
             model=self.model_id,
+            cost=GenerationCost(
+                currency=Currency.CNY,
+                multiplier=0,
+                prompt_tokens=prompt_tokens,
+                prompt_cost=0,
+                generated_tokens=completion_tokens,
+                generated_cost=0,
+                total_cost=0,
+                total_tokens=prompt_tokens + completion_tokens,
+            ),
         )
 
     async def stream(
         self,
         content: Union[str, Iterable[GenerationMessageParam]],
         frequency_penalty: Optional[float] | NotGiven = NOT_GIVEN,
-        logit_bias: Optional[Dict[str, int]] | NotGiven = NOT_GIVEN,
-        logprobs: Optional[bool] | NotGiven = NOT_GIVEN,
-        max_completion_tokens: Optional[int] | NotGiven = NOT_GIVEN,
         max_tokens: Optional[int] | NotGiven = NOT_GIVEN,
-        metadata: Optional[Dict[str, str]] | NotGiven = NOT_GIVEN,
-        n: Optional[int] | NotGiven = NOT_GIVEN,
-        parallel_tool_calls: bool | NotGiven = NOT_GIVEN,
-        presence_penalty: Optional[float] | NotGiven = NOT_GIVEN,
-        response_format: ResponseFormat | NotGiven = NOT_GIVEN,
-        seed: Optional[int] | NotGiven = NOT_GIVEN,
-        service_tier: Optional[Literal["auto", "default"]] | NotGiven = NOT_GIVEN,
-        stop: Union[Optional[str], List[str]] | NotGiven = NOT_GIVEN,
-        store: Optional[bool] | NotGiven = NOT_GIVEN,
         temperature: Optional[float] | NotGiven = NOT_GIVEN,
-        tool_choice: ChatCompletionToolChoiceOptionParam | NotGiven = NOT_GIVEN,
-        tools: Iterable[ChatCompletionToolParam] | NotGiven = NOT_GIVEN,
-        top_logprobs: Optional[int] | NotGiven = NOT_GIVEN,
         top_p: Optional[float] | NotGiven = NOT_GIVEN,
-        user: str | NotGiven = NOT_GIVEN,
-        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-        return_original_response: bool = False,
-        stream: bool = False,
+        stream: bool = True,
         **kwargs,
     ) -> AsyncGenerator[GenerationChunk, None]:
         if kwargs:
             logger.warning(f"{self.model_id} Unused kwargs: {kwargs}")
         created = time.time()
         inputs = self.prepare_input_chat_template(content)
-        streamer = TextIteratorStreamer(self.tokenizer)
+        streamer = TextIteratorStreamer(
+            self.tokenizer,
+            skip_prompt=True,
+            skip_special_tokens=True,
+        )
         generation_kwargs = {
             **inputs.to(self.device),
             **filter_notgiven(
@@ -194,6 +190,29 @@ class TransformerGeneration(BaseGenerationModel):
                 generation_time=time.time() - created,
                 model=self.model_id,
             )
+        yield GenerationChunk(
+            id=id,
+            choices=[
+                ChunkChoice(
+                    delta=ChoiceDelta(role="assistant", content=""),
+                    index=0,
+                    finish_reason="stop",
+                )
+            ],
+            created=created,
+            generation_time=time.time() - created,
+            model=self.model_id,
+            cost=GenerationCost(
+                currency=Currency.CNY,
+                multiplier=0,
+                prompt_tokens=inputs["input_ids"].size(1),
+                prompt_cost=0,
+                generated_tokens=0,
+                generated_cost=0,
+                total_cost=0,
+                total_tokens=0,
+            ),
+        )
 
     async def tokenize(
         self, content: Union[str, Iterable[str], Iterable[GenerationMessageParam]], **kwargs

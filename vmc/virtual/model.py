@@ -57,6 +57,11 @@ class PhysicalModel:
         self.budget = budget
         self._model = None
         self.physical = physical
+        self.forward = (
+            self.model.is_local
+            and not self.physical
+            and (self.model.load_method == "tf" or self.model.load_method is None)
+        )
 
     async def load(self):
         if self.model.is_local:

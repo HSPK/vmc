@@ -23,7 +23,8 @@ class ModelConfig(BaseModel):
     description: str | None = None
     knowledge_date: str | None = None
     port: int | None = None
-    gpu_limit: int = 1
+    gpu_limit: int = 0
+    """GPU limit for local model, 0 means no limit"""
 
     is_local: bool = False
 

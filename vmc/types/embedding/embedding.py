@@ -19,6 +19,9 @@ class Cost(BaseModel):
     """The total cost of the request."""
 
 
+NO_COST = Cost(currency=Currency.USD, prompt_tokens=0, prompt_cost=0, total_tokens=0, total_cost=0)
+
+
 class EmbeddingResponse(BaseOutput):
     created: float
     """The timestamp of when the request was created."""
@@ -40,6 +43,5 @@ class EmbeddingResponse(BaseOutput):
 
     cost: Cost | None = None
     """The usage information for the request."""
-    
+
     original_response: dict | None = None
-    

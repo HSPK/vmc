@@ -1,16 +1,16 @@
 from fastapi.responses import StreamingResponse
 
 from vmc.exception import exception_handler
-from vmc.models import VMC, ModelType
 from vmc.models.openai.response_adapter import (
     restore_completion,
     restore_completion_chunk,
     restore_embedding,
 )
+from vmc.virtual.model import PhysicalModel
 
 
 class FastAPIWrapper:
-    def __init__(self, model: ModelType):
+    def __init__(self, model: PhysicalModel):
         self.model = model
         self.embedding = model._embedding
         self.rerank = model._rerank
@@ -33,7 +33,7 @@ class FastAPIWrapper:
                 media_type="text/event-stream",
                 headers={"X-Accel-Buffering": "no"},
             )
-        return self.model._generate(*args, **kwargs)
+        return await self.model._generate(*args, **kwargs)
 
     async def generate_openai(self, *args, **kwargs):
         async def _streaming():
@@ -58,8 +58,8 @@ class FastAPIWrapper:
         return restore_embedding(await self.model._embedding(*args, **kwargs))
 
 
-def wrap_fastapi(model: ModelType) -> FastAPIWrapper:
-    if isinstance(model, VMC):
+def wrap_fastapi(model: PhysicalModel) -> FastAPIWrapper:
+    if model.forward:
         """Direct forward response from VMC Server"""
         return model
     else:

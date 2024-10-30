@@ -18,6 +18,7 @@ async def load_local_model(model: ModelConfig):
         type=model.type,
         backend=model.backend,
         device_map_auto=model.device_map_auto,
+        gpu_limit=model.gpu_limit,
     )
     port = res["port"]
     if load_method == "tf":

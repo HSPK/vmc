@@ -16,6 +16,7 @@ class ServeParams(TypedDict, total=False):
     api_key: str
     backend: Literal["torch", "onnx", "openvino"]
     device_map_auto: bool
+    gpu_limit: int
 
 
 class StopParams(TypedDict):
