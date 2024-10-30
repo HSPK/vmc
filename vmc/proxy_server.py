@@ -4,6 +4,8 @@ from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from openai._exceptions import OpenAIError
+from zhipuai import ZhipuAIError
 
 from vmc.context.request import request as request_context
 from vmc.exception import exception_handler
@@ -31,12 +33,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     ).to_response()
 
 
-@app.exception_handler(VMCException)
-async def handle_vmc_exception(request: Request, exc: VMCException):
-    msg = await exception_handler(exc)
-    return msg.to_response()
-
-
 @app.exception_handler(Exception)
 async def handle_exception(request: Request, exc: Exception):
     msg = await exception_handler(exc)
@@ -49,6 +45,15 @@ async def validate_token(request: Request, call_next):
     request_context.set(request)
     return await call_next(request)
 
+
+async def default_exception_handler(request: Request, exc: Exception):
+    msg = await exception_handler(exc)
+    return msg.to_response()
+
+
+app.add_exception_handler(VMCException, default_exception_handler)
+app.add_exception_handler(OpenAIError, default_exception_handler)
+app.add_exception_handler(ZhipuAIError, default_exception_handler)
 
 app.include_router(openai.router)
 app.include_router(vmc.router)

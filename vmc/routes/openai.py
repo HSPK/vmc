@@ -1,19 +1,11 @@
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, File, Form, UploadFile
-from fastapi.responses import StreamingResponse
-from loguru import logger
 from openai.types.audio import TranscriptionCreateParams
 from openai.types.chat.completion_create_params import CompletionCreateParams
 from openai.types.embedding_create_params import EmbeddingCreateParams
 
-from vmc.exception import exception_handler
-from vmc.models.audio import BaseAudioModel
-from vmc.models.openai.response_adapter import (
-    restore_completion,
-    restore_completion_chunk,
-    restore_embedding,
-)
+from vmc.routes.wrapper import wrap_fastapi
 from vmc.types.embedding import EmbeddingParams as VMCEmbeddingParams
 from vmc.types.generation import GenerationParams
 from vmc.virtual import vmm
@@ -37,32 +29,11 @@ def adapt_embedding_params(params: EmbeddingCreateParams) -> VMCEmbeddingParams:
     return VMCEmbeddingParams(**d, content=params["input"])
 
 
-async def _stream_generator(params: GenerationParams):
-    try:
-        model = await vmm.get(params["model"], type="chat")
-        async for token in await model._generate(**remove_keys(params, {"model"})):
-            chunk = restore_completion_chunk(token)
-            yield f"data: {chunk.model_dump_json()}\n\n"
-    except Exception as e:
-        msg = await exception_handler(e)
-        yield msg.to_event()
-        return
-
-
 @router.post("/chat/completions")
 async def chat_completion(req: CompletionCreateParams):
     params = adapt_completion_params(req)
-    if params.get("stream", False):
-        return StreamingResponse(
-            _stream_generator(params),
-            media_type="text/event-stream",
-            headers={"X-Accel-Buffering": "no"},
-        )
-
-    model = await vmm.get(params["model"], type="chat")
-
-    res = await model._generate(**remove_keys(params, {"model"}))
-    return restore_completion(res)
+    model = wrap_fastapi(await vmm.get(params["model"], type="chat"))
+    return await model.generate_openai(**remove_keys(params, {"model"}))
 
 
 @router.post("/audio/transcriptions")
@@ -75,17 +46,15 @@ async def transciption(
     req = TranscriptionCreateParams(
         file=await file.read(), model=model, language=language, temperature=temperature
     )
-    logger.info(f"transcription request: {req['model']}, {file.filename}")
-    model: BaseAudioModel = await vmm.get(model, type="audio")
-    return model._transcribe(**req)
+    audio = wrap_fastapi(await vmm.get(req.model, type="audio"))
+    return audio.transcribe(**remove_keys(req, {"model"}))
 
 
 @router.post("/embeddings")
 async def embeddings(req: EmbeddingCreateParams):
     params = adapt_embedding_params(req)
-    model = await vmm.get(params["model"], type="embedding")
-    embedding = await model._embedding(**remove_keys(params, {"model"}))
-    return restore_embedding(embedding)
+    model = wrap_fastapi(await vmm.get(params["model"], type="embedding"))
+    return await model.embedding_openai(**remove_keys(params, {"model"}))
 
 
 @router.get("/models")

@@ -22,7 +22,7 @@ def cli():
 @click.option("--host", default="localhost")
 @click.option("--port", default=8100)
 @click.option("--api-key", default=None)
-@click.option("--debug", is_flag=True)
+@click.option("--reload", is_flag=True)
 @click.option("--backend", default="torch")
 @click.option("--device-map-auto", is_flag=True)
 def serve(
@@ -34,7 +34,7 @@ def serve(
     host: str,
     port: int,
     api_key: str,
-    debug: bool,
+    reload: bool,
     device_map_auto: bool,
 ):
     from vmc.serve import SERVER_FAILED_MSG
@@ -52,7 +52,7 @@ def serve(
 
     if api_key:
         os.environ["SERVE_API_KEY"] = api_key
-    if debug:
+    if reload:
         cmd = [
             "uvicorn",
             "vmc.serve.server:create_app",
