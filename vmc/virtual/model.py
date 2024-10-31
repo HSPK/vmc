@@ -6,8 +6,6 @@ from enum import Enum
 import vmc.models as api_module
 from vmc.types.model_config import ModelConfig
 
-from ..serve.manager.local import load_local_model
-
 
 class Algorithm(Enum):
     RANDOM = "random"
@@ -72,6 +70,8 @@ class PhysicalModel:
                     **{**self.model.init_kwargs, "config": self.model}
                 )
             else:
+                from vmc.serve.manager.local import load_local_model
+
                 self._model = await load_local_model(self.model)
         else:
             self._model = getattr(api_module, self.model.model_class)(
