@@ -72,7 +72,7 @@ class OpenAI(BaseGenerationModel, BaseEmbeddingModel):
         self,
         max_retries: int | None = None,
         timeout: httpx.Timeout | None = None,
-        use_proxy: bool = True,
+        use_proxy: bool = False,
         *args,
         **kwargs,
     ):
@@ -166,7 +166,7 @@ class OpenAI(BaseGenerationModel, BaseEmbeddingModel):
     def client(self):
         credential = self.set_credential()
         httpx_client = None
-        if self.use_proxy:
+        if self.use_proxy and os.getenv("_HTTP_PROXY", None) and os.getenv("_HTTPS_PROXY", None):
             httpx_client = httpx.AsyncClient(
                 proxies={
                     "http_proxy://": os.getenv("_HTTP_PROXY", None),

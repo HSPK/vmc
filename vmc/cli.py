@@ -5,7 +5,10 @@ import click
 from dotenv import find_dotenv, load_dotenv
 from typing_extensions import Literal
 
-load_dotenv(find_dotenv())
+dotenv = find_dotenv(usecwd=True)
+if not dotenv:
+    print("No .env file found. Using default config, We highly recommend creating one.")
+load_dotenv(dotenv)
 
 
 @click.group()
@@ -111,9 +114,6 @@ def dashboard(port: int):
 @click.option("--port", "-p", default=None)
 @click.option("--reload", is_flag=True)
 def start_server(port: int | None = None, reload: bool = False):
-    from dotenv import find_dotenv, load_dotenv
-
-    load_dotenv(find_dotenv())
     workers = os.getenv("VMC_WORKERS", 1)
     host = os.getenv("VMC_SERVER_HOST", "localhost")
     port = port or os.getenv("VMC_SERVER_PORT", 8000)
