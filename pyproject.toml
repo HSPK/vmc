@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "vmc"
-version = "0.0.1"
+version = "0.0.3"
 description = "VMC(Virtual Model Collection) is a collection of virtual models for various tasks."
 authors = ["HSPK <whxway@whu.edu.cn>"]
 license = "MIT"
@@ -11,7 +11,7 @@ packages = [{ include = "vmc" }]
 vmc = 'vmc.cli:cli'
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.12"
+python = "^3.10"
 zhipuai = "^2.1.3"
 openai = "^1.35.14"
 fastapi = { extras = ["all"], version = "^0.111.1" }
