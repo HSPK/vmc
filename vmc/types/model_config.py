@@ -55,6 +55,7 @@ class ProviderConfig(BaseModel):
     credentials: list[dict] | None = None
     models: list[ModelConfig] | None = None
     is_local: bool = False
+    common_init_kwargs: dict[str, Any] = {}
 
     @classmethod
     def from_yaml(cls, path: str):
@@ -64,7 +65,7 @@ class ProviderConfig(BaseModel):
             raise FileNotFoundError(f"File not found: {path}")
         with open(path, "r", encoding="utf-8") as f:
             obj = cls(**yaml.safe_load(f))
-            if "local" in obj.provider_name.lower():
+            if "local" in obj.provider_name.lower() or obj.is_local:
                 obj.is_local = True
                 for model in obj.models:
                     model.is_local = True

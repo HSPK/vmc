@@ -5,10 +5,10 @@ from openai.types.audio import TranscriptionCreateParams
 from openai.types.chat.completion_create_params import CompletionCreateParams
 from openai.types.embedding_create_params import EmbeddingCreateParams
 
+from vmc.proxy import vmm
 from vmc.routes.wrapper import wrap_fastapi
 from vmc.types.embedding import EmbeddingParams as VMCEmbeddingParams
 from vmc.types.generation import GenerationParams
-from vmc.virtual import vmm
 
 router = APIRouter(prefix="/v1")
 

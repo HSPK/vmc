@@ -7,7 +7,7 @@ from vmc.serve.manager.params import ServeParams, StatusCode
 from vmc.types.errors.errors import ServeError
 
 
-class MangerClient:
+class ManagerClient:
     def __init__(self, host: str | None = None, port: int | None = None):
         host = host or os.getenv("VMC_MANAGER_HOST")
         port = port or os.getenv("VMC_MANAGER_PORT")

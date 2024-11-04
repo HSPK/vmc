@@ -1,16 +1,19 @@
 from vmc.models import VMC
-from vmc.serve.manager.client import MangerClient
+from vmc.serve.manager.client import ManagerClient
 from vmc.types.model_config import ModelConfig
 from vmc.utils import find_available_port
 
-client = MangerClient()
+_client: ManagerClient = None
 
 
 async def load_local_model(model: ModelConfig):
-    assert await client.health(), "Manager is not running"
+    global _client
+    if _client is None:
+        _client = ManagerClient()
+    assert await _client.health(), "Manager is not running"
     port = find_available_port()
     load_method = model.load_method or "tf"
-    res = await client.serve(
+    res = await _client.serve(
         name=model.name,
         port=port,
         model_id=model.init_kwargs.get("model_id"),

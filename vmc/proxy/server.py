@@ -1,4 +1,6 @@
 import json
+import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
@@ -7,15 +9,41 @@ from fastapi.middleware.cors import CORSMiddleware
 from openai._exceptions import OpenAIError
 from zhipuai import ZhipuAIError
 
+from vmc.callback import callback
 from vmc.context.request import request as request_context
 from vmc.exception import exception_handler
+from vmc.proxy.callback import init_callback
 from vmc.routes import openai, vmc
 from vmc.types.errors._base import VMCException
 from vmc.types.errors.message import ErrorMessage
 from vmc.types.errors.status_code import HTTP_CODE as s
 from vmc.types.errors.status_code import VMC_CODE as v
 
-app = FastAPI()
+
+async def app_startup():
+    proxy_callbacks = os.getenv("VMC_PROXY_CALLBACKS")
+    if not proxy_callbacks:
+        proxy_callbacks = ["proxy_app_lifespan"]
+    else:
+        proxy_callbacks = proxy_callbacks.split(",")
+    if "proxy_app_lifespan" not in proxy_callbacks:
+        proxy_callbacks.append("proxy_app_lifespan")
+    init_callback(proxy_callbacks)
+    await callback.on_startup()
+
+
+async def app_shutdown():
+    await callback.on_shutdown()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await app_startup()
+    yield
+    await app_shutdown()
+
+
+app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

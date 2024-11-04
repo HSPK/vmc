@@ -6,11 +6,11 @@ from vmc.models.openai.response_adapter import (
     restore_completion_chunk,
     restore_embedding,
 )
-from vmc.virtual.model import PhysicalModel
+from vmc.proxy.model import ProxyModel
 
 
 class FastAPIWrapper:
-    def __init__(self, model: PhysicalModel):
+    def __init__(self, model: ProxyModel):
         self.model = model
         self.embedding = model._embedding
         self.rerank = model._rerank
@@ -58,7 +58,7 @@ class FastAPIWrapper:
         return restore_embedding(await self.model._embedding(*args, **kwargs))
 
 
-def wrap_fastapi(model: PhysicalModel) -> FastAPIWrapper:
+def wrap_fastapi(model: ProxyModel) -> FastAPIWrapper:
     if model.forward:
         """Direct forward response from VMC Server"""
         return model

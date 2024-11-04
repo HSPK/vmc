@@ -34,11 +34,11 @@ def create_app():
     async def lifespan(app: FastAPI):
         import rich
 
-        from vmc.virtual import set_vmm, vmm
-        from vmc.virtual.manager import VirtualModelManager
+        from vmc.proxy import init_vmm, vmm
+        from vmc.proxy.manager import VirtualModelManager
 
         rich.print(f"✅ {name} loading({method})...")
-        set_vmm(
+        init_vmm(
             await VirtualModelManager.from_serve(
                 name=name,
                 model_id=model_id,

@@ -1,5 +1,6 @@
 from typing import Iterable, List, Literal, Union
 
+from vmc.callback import callback
 from vmc.models.utils import filter_notgiven
 from vmc.types._types import NOT_GIVEN, NotGiven
 from vmc.types.embedding import EmbeddingResponse
@@ -36,7 +37,7 @@ class BaseEmbeddingModel(BaseModel):
         title: str | NotGiven = NOT_GIVEN,
         **kwargs,
     ) -> EmbeddingResponse:
-        await self.callback.on_embedding_start(content, kwargs)
+        await callback.on_embedding_start(model=self, content=content, **kwargs)
         res = await self.embedding(
             **filter_notgiven(
                 content=content,
@@ -50,5 +51,5 @@ class BaseEmbeddingModel(BaseModel):
                 **kwargs,
             )
         )
-        await self.callback.on_embedding_end(res)
+        await callback.on_embedding_end(model=self, output=res)
         return res

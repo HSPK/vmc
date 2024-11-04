@@ -4,6 +4,7 @@ from fastapi import APIRouter, File, Form, UploadFile
 from openai.types.audio.transcription_create_params import TranscriptionCreateParams
 
 from vmc.db import storage
+from vmc.proxy import vmm
 from vmc.routes.wrapper import wrap_fastapi
 from vmc.types._base import BaseOutput
 from vmc.types.embedding import EmbeddingParams
@@ -12,7 +13,6 @@ from vmc.types.generation.tokenize_params import TokenizeParams
 from vmc.types.image.upload import ImageUploadOutput
 from vmc.types.models import ModelInfoOutput
 from vmc.types.rerank import RerankParams
-from vmc.virtual import vmm
 
 router = APIRouter()
 

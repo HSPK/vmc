@@ -13,6 +13,7 @@ from typing import (
 
 import httpx
 
+from vmc.callback import callback
 from vmc.models.utils import filter_notgiven
 from vmc.types import NOT_GIVEN, NotGiven
 from vmc.types.generation.generation import Generation
@@ -148,13 +149,17 @@ class BaseGenerationModel(BaseModel, ABC):
         if stream:
 
             async def streaming(*args, **kwargs) -> AsyncGenerator[GenerationChunk, None]:
+                await callback.on_generation_start(model=self, **params)
+                tokens = []
                 async for t in self.stream(*args, **kwargs):
                     yield t
+                    tokens.append(t)
+                await callback.on_generation_end(model=self, output=tokens)
 
             return streaming(**params)
-        await self.callback.on_chat_start(content)
+        await callback.on_generation_start(model=self, **params)
         res = await self.generate(**params)
-        await self.callback.on_chat_end(res)
+        await callback.on_generation_end(model=self, output=res)
         return res
 
     async def tokenize(

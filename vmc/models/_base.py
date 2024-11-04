@@ -3,8 +3,6 @@ import random
 
 from vmc.types.model_config import ModelConfig
 
-from .callback import Callback, CallbackProxy
-
 
 class BaseModel:
     """Base model for actual models.
@@ -15,7 +13,6 @@ class BaseModel:
         config: ModelConfig,
         model_id: str | None = None,
         credentials: list[dict[str, str]] | None = None,
-        callbacks: list[Callback] = [],
     ):
         """Initialize the model
 
@@ -30,7 +27,6 @@ class BaseModel:
         self.model_id = model_id or config.name
         self.pricing = config.pricing
         self.credentials = credentials
-        self.callback = CallbackProxy(callbacks)
 
     def _choose_credential(self):
         if self.credentials:

@@ -1,3 +1,4 @@
+from vmc.callback import callback
 from vmc.types.audio import Transcription
 
 from ._base import BaseModel
@@ -8,7 +9,7 @@ class BaseAudioModel(BaseModel):
         raise NotImplementedError("transcribe is not implemented")
 
     async def _transcribe(self, file: str, **kwargs) -> Transcription:
-        await self.callback.on_transcribe_start(file, kwargs)
+        await callback.on_transcribe_start(model=self, file=file, **kwargs)
         res = await self.transcribe(file, **kwargs)
-        await self.callback.on_transcribe_end(res)
+        await callback.on_transcribe_end(model=self, output=res)
         return res

@@ -115,8 +115,8 @@ def dashboard(port: int):
 @click.option("--reload", is_flag=True)
 def start_server(port: int | None = None, reload: bool = False):
     workers = os.getenv("VMC_WORKERS", 1)
-    host = os.getenv("VMC_SERVER_HOST", "localhost")
-    port = port or os.getenv("VMC_SERVER_PORT", 8000)
+    host = os.getenv("VMC_PROXY_HOST", "localhost")
+    port = port or os.getenv("VMC_PROXY_PORT", 8000)
     title = f"VMC {get_version()} started"
     msg = get_last_commit_message()
     from rich import print
@@ -135,12 +135,12 @@ def start_server(port: int | None = None, reload: bool = False):
             "300",
             "--log-level",
             "info",
-            "vmc.proxy_server:app",
+            "vmc.proxy.server:app",
         ]
     else:
         cmd = [
             "uvicorn",
-            "vmc.proxy_server:app",
+            "vmc.proxy.server:app",
             "--reload",
             "--host",
             host,

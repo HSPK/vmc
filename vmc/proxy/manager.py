@@ -1,4 +1,4 @@
-from typing_extensions import Literal
+from typing_extensions import Literal, TypedDict
 
 import vmc.models as api_module
 import vmc.serve.models as serve_module
@@ -6,30 +6,38 @@ from vmc.models import ModelType
 from vmc.types.errors import GroupExistsError, GroupNotFoundError, ModelNotFoundError
 from vmc.types.model_config import ModelConfig, ProviderConfig, Providers
 
-from .model import PhysicalModel, VirtualModel
+from .model import ProxyModel, VirtualModel
 
 
 def uniform(id: str):
     return id.lower().replace("-", "").strip()
 
 
+class ValidationResult(TypedDict):
+    config: ModelConfig
+    credentials: list[dict]
+    common_init_kwargs: dict
+
+
 def validate_models(providers: list[ProviderConfig]):
-    model_configs: dict[str, ModelConfig] = {}
-    credentials: dict[str, list[dict]] = {}
-    for p in providers:
-        for m in p.models:
-            id_ = uniform(f"{m.type}/{m.name}")
-            if id_ in model_configs:
-                id_ = f"{p.provider_name}/{id_}"
-                if id_ in model_configs:
+    result: dict[str, ValidationResult] = {}
+    for provider_config in providers:
+        for model_config in provider_config.models:
+            id_ = uniform(f"{model_config.type}/{model_config.name}")
+            if id_ in result:
+                id_ = f"{provider_config.provider_name}/{id_}"
+                if id_ in result:
                     raise ValueError(f"model {id_} already exists")
-            if m.is_local and m.model_class not in serve_module.model_names:
-                raise ValueError(f"{m.model_class} not found in local models")
-            if not m.is_local and m.model_class not in api_module.model_names:
-                raise ValueError(f"{m.model_class} not found in API models")
-            model_configs[id_] = m
-            credentials[id_] = p.credentials
-    return model_configs, credentials
+            if model_config.is_local and model_config.model_class not in serve_module.model_names:
+                raise ValueError(f"{model_config.model_class} not found in local models")
+            if not model_config.is_local and model_config.model_class not in api_module.model_names:
+                raise ValueError(f"{model_config.model_class} not found in API models")
+            result[id_] = {
+                "config": model_config,
+                "credentials": provider_config.credentials,
+                "common_init_kwargs": provider_config.common_init_kwargs,
+            }
+    return result
 
 
 class VirtualModelManager:
@@ -45,23 +53,19 @@ class VirtualModelManager:
     Supported Algorithms: Random, Round Robin, Least Busy, Priority, Budget, etc.
     """
 
-    model_configs: dict[str, ModelConfig]
-    credentials: dict[str, list[dict]]
-
-    def __init__(self, model_configs: dict[str, ModelConfig], credentials: dict[str, list[dict]]):
-        self.model_configs, self.credentials = model_configs, credentials
+    def __init__(self, validated_config: dict[str, ValidationResult]):
+        self.model_configs = validated_config
         self.loaded_models = {}
 
     @classmethod
     def from_providers(cls, providers: list[ProviderConfig]):
-        model_configs, credentials = validate_models(providers)
-        return cls(model_configs, credentials)
+        validated_config = validate_models(providers)
+        return cls(validated_config)
 
     @classmethod
     def from_yaml(cls, path: str | None):
-        providers = Providers.from_yaml(path).providers
-        model_configs, credentials = validate_models(providers)
-        return cls(model_configs, credentials)
+        validated_config = validate_models(Providers.from_yaml(path).providers)
+        return cls(validated_config)
 
     @classmethod
     async def from_serve(
@@ -77,7 +81,7 @@ class VirtualModelManager:
         if method == "config":
             assert model_id == name, "model_id is not required for config method"
             providers = Providers.from_yaml(None).providers
-            model_configs, credentials = validate_models(providers)
+            validated_config = validate_models(providers)
             if type is None:
                 _id_candidates = [
                     uniform(f"{t}/{name}") for t in ["chat", "embedding", "reranker", "audio"]
@@ -85,13 +89,12 @@ class VirtualModelManager:
             else:
                 _id_candidates = [uniform(f"{type}/{name}")]
             for _id in _id_candidates:
-                if _id in model_configs:
+                if _id in validated_config:
                     break
             else:
                 raise ModelNotFoundError(msg=f"{name} not found")
-            model_configs = {_id: model_configs[_id]}
-            credentials = {_id: credentials[_id]}
-            obj = cls(model_configs, credentials)
+            validated_config = {_id: validated_config[_id]}
+            obj = cls(validated_config)
             await obj.load(_id, physical=True)
             return obj
         elif method == "tf":
@@ -167,9 +170,10 @@ class VirtualModelManager:
             return self.loaded_models[id]
         if id not in self.model_configs:
             raise ModelNotFoundError(msg=f"{id} not found") from None
-        model = PhysicalModel(
-            model=self.model_configs[id],
-            credentials=self.credentials[id],
+        model = ProxyModel(
+            model=self.model_configs[id]["config"],
+            credentials=self.model_configs[id]["credentials"],
+            init_kwargs=self.model_configs[id]["common_init_kwargs"],
             physical=physical,
         )
         if physical:

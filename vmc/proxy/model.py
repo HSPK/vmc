@@ -37,11 +37,12 @@ class RateLimiter:
         return False
 
 
-class PhysicalModel:
+class ProxyModel:
     def __init__(
         self,
         model: ModelConfig,
-        credentials: list[dict],
+        credentials: list[dict] | None = None,
+        init_kwargs: dict | None = None,
         rate: int = 0,
         period: int = 0,
         priority: int = 0,
@@ -50,7 +51,9 @@ class PhysicalModel:
     ):
         self.model = model
         self.ratelimiter = RateLimiter(rate, period)
-        self.credentials = credentials
+        self.credentials = credentials or []
+        self.init_kwargs = init_kwargs or {}
+        self.init_kwargs = {**self.init_kwargs, **self.model.init_kwargs}
         self.priority = priority
         self.budget = budget
         self._model = None
@@ -67,15 +70,15 @@ class PhysicalModel:
                 from vmc.serve.models import modules
 
                 self._model = getattr(modules, self.model.model_class)(
-                    **{**self.model.init_kwargs, "config": self.model}
+                    **{**self.init_kwargs, "config": self.model}
                 )
             else:
-                from vmc.serve.manager.local import load_local_model
+                from vmc.proxy.utils import load_local_model
 
                 self._model = await load_local_model(self.model)
         else:
             self._model = getattr(api_module, self.model.model_class)(
-                **{"credentials": self.credentials, **self.model.init_kwargs, "config": self.model}
+                **{"credentials": self.credentials, **self.init_kwargs, "config": self.model}
             )
 
     def alive(self):
@@ -104,7 +107,7 @@ class PhysicalModel:
 
 
 class VirtualModel:
-    def __init__(self, models: list[PhysicalModel], algorithm: Algorithm = Algorithm.ROUND_ROBIN):
+    def __init__(self, models: list[ProxyModel], algorithm: Algorithm = Algorithm.ROUND_ROBIN):
         self.models = models
         self.algorithm = algorithm
         self.index = 0
