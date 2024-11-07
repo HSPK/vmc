@@ -126,7 +126,7 @@ class VirtualModelManager:
 
     @property
     def models(self):
-        return {m.name: m.dump() for m in self.model_configs.values()}
+        return {m["config"].name: m["config"].dump() for m in self.model_configs.values()}
 
     async def add_model_group(
         self, group_name: str, model_ids: list[str], algorithm: str = "round_robin"

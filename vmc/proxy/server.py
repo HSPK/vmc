@@ -87,7 +87,6 @@ async def validate_token(request: Request, call_next):
 
 async def default_exception_handler(request: Request, exc: Exception):
     msg = await exception_handler(exc)
-    await callback.on_exception(request, exc)
     return msg.to_response()
 
 
