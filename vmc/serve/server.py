@@ -9,6 +9,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from vmc.callback import callback
+from vmc.context.user import set_user
+from vmc.db.schema import User
 from vmc.exception import exception_handler
 from vmc.routes import openai, vmc
 from vmc.serve import SERVER_STARTED_MSG
@@ -91,12 +93,14 @@ async def handle_exception(request: Request, exc: Exception):
 
 @app.middleware("http")
 async def validate_token(request: Request, call_next):
-    if not API_KEY:
-        return await call_next(request)
-    if request.headers.get("Authorization").replace("Bearer ", "") != API_KEY:
+    if API_KEY and request.headers.get("Authorization").replace("Bearer ", "") != API_KEY:
         return ErrorMessage(
             status_code=s.UNAUTHORIZED, code=v.UNAUTHORIZED, msg="Unauthorized"
         ).to_response()
+    logging_username = request.headers.get(
+        "X-VMC-Logging-User", os.getenv("VMC_SERVE_DEFAULT_USER", "vmc")
+    )
+    set_user(User(id=logging_username, username=logging_username, password="vmc", role="user"))
     return await call_next(request)
 
 

@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 from starlette.background import BackgroundTask
 
 from vmc.context.request import request
+from vmc.context.user import current_user
 from vmc.types.errors import VMCException
 
 
@@ -19,11 +20,13 @@ class VMC:
 
         async def _(**kwargs):
             req = request.get()
+            headers = req.headers.mutablecopy()
+            headers["X-VMC-Logging-User"] = current_user.username
             http_req = self.client.build_request(
                 req.method,
                 url=req.url.path,
                 content=req.scope["body"],
-                headers=req.headers,
+                headers=headers,
             )
             try:
                 res = await self.client.send(http_req, stream=True)
