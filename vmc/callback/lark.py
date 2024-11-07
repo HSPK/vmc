@@ -1,0 +1,25 @@
+import os
+
+from fastapi import Request
+from slark import AsyncLark
+
+from vmc.callback.base import VMCCallback
+
+
+class LarkNotify(VMCCallback):
+    def __init__(self, webhook_url: str | None = None):
+        super().__init__(run_in_background=True)
+        webhook_url = webhook_url or os.getenv("LARK_WEBHOOK")
+        assert webhook_url, "Lark Webhook URL is required"
+        self.lark = AsyncLark(webhook=webhook_url)
+
+    async def on_startup(self, title=None, message=None, **kwargs):
+        await self.lark.webhook.post_success_card(msg=message, title=title)
+
+    async def on_shutdown(self, title=None, message=None, **kwargs):
+        await self.lark.webhook.post_success_card(msg=message, title=title)
+
+    async def on_exception(self, request: Request, exc: Exception, **kwargs):
+        await self.lark.webhook.post_error_card(
+            msg=str(exc), traceback=exc.__traceback__, title=exc.__class__.__name__
+        )

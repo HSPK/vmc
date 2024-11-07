@@ -1,4 +1,5 @@
 from vmc.callback import (
+    LarkNotify,
     LoggingCallback,
     SaveGenerationToDB,
     VMCCallback,
@@ -10,7 +11,7 @@ from vmc.proxy.manager import VirtualModelManager
 
 
 class ProxyAppLifeSpan(VMCCallback):
-    async def on_startup(self):
+    async def on_startup(self, title=None, message=None, **kwargs):
         print("✅ Setting up models...")
         init_vmm(VirtualModelManager.from_yaml(None))
         print("✅ Initializing Database...")
@@ -26,6 +27,8 @@ def init_callback(cb_ids: list[str]):
             callbacks.append(LoggingCallback())
         elif cb_id == "db_save":
             callbacks.append(SaveGenerationToDB(run_in_background=True))
+        elif cb_id == "lark":
+            callbacks.append(LarkNotify())
         else:
             raise ValueError(f"Unknown callback: {cb_id}")
     set_callback(VMCCallbackGroup(callbacks))

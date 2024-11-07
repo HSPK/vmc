@@ -2,6 +2,7 @@ from vmc.utils import LazyObjProxy
 
 from .base import VMCCallback, VMCCallbackGroup
 from .callbacks import LoggingCallback, SaveGenerationToDB
+from .lark import LarkNotify
 
 callback: VMCCallback = LazyObjProxy(lambda: _get_callback())
 
@@ -19,4 +20,4 @@ def set_callback(callback: VMCCallbackGroup):
     _callback = callback
 
 
-__all__ = ["VMCCallback", "VMCCallbackGroup", "LoggingCallback", "SaveGenerationToDB"]
+__all__ = ["VMCCallback", "VMCCallbackGroup", "LoggingCallback", "SaveGenerationToDB", "LarkNotify"]

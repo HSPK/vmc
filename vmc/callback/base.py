@@ -1,6 +1,7 @@
 import asyncio
 from typing import TYPE_CHECKING, Union
 
+from fastapi import Request
 from loguru import logger
 
 from vmc.types.audio import Transcription
@@ -16,10 +17,10 @@ class VMCCallback:
     def __init__(self, *, run_in_background: bool = False):
         self.run_in_background = run_in_background
 
-    async def on_startup(self):
+    async def on_startup(self, title: str | None = None, message: str | None = None, **kwargs):
         pass
 
-    async def on_shutdown(self):
+    async def on_shutdown(self, title: str | None = None, message: str | None = None, **kwargs):
         pass
 
     async def on_generation_start(
@@ -50,6 +51,9 @@ class VMCCallback:
     async def on_transcribe_end(self, model: "BaseModel", output: Transcription):
         pass
 
+    async def on_exception(self, request: Request, exc: Exception, **kwargs):
+        pass
+
 
 class VMCCallbackGroup:
     def __init__(self, callbacks: list[VMCCallback]):
@@ -66,8 +70,9 @@ class VMCCallbackGroup:
             else:
                 foreground_tasks.append(getattr(callback, name))
         try:
-            for task in background_tasks:
-                asyncio.create_task(task(*args, **kwargs))
+            tasks = [asyncio.create_task(task(*args, **kwargs)) for task in background_tasks]
+            if kwargs.get("gather_background", False):
+                await asyncio.gather(*tasks)
             await asyncio.gather(*(task(*args, **kwargs) for task in foreground_tasks))
         except Exception as e:
             logger.error(f"Error in callback {name}: {e}")

@@ -20,6 +20,12 @@ from vmc.types.errors.status_code import HTTP_CODE as s
 from vmc.types.errors.status_code import VMC_CODE as v
 
 
+def get_version():
+    import importlib.metadata
+
+    return importlib.metadata.version("vmc")
+
+
 async def app_startup():
     proxy_callbacks = os.getenv("VMC_PROXY_CALLBACKS")
     if not proxy_callbacks:
@@ -29,11 +35,16 @@ async def app_startup():
     if "proxy_app_lifespan" not in proxy_callbacks:
         proxy_callbacks.append("proxy_app_lifespan")
     init_callback(proxy_callbacks)
-    await callback.on_startup()
+    await callback.on_startup(
+        title=f"VMC Proxy v{get_version()} Started",
+        message="For more information, please visit xxx",
+    )
 
 
 async def app_shutdown():
-    await callback.on_shutdown()
+    await callback.on_shutdown(
+        title=f"VMC Proxy v{get_version()} Stopped", message="Stopped", gather_background=True
+    )
 
 
 @asynccontextmanager
@@ -76,6 +87,7 @@ async def validate_token(request: Request, call_next):
 
 async def default_exception_handler(request: Request, exc: Exception):
     msg = await exception_handler(exc)
+    await callback.on_exception(request, exc)
     return msg.to_response()
 
 

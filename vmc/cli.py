@@ -87,23 +87,6 @@ def serve(
         exit(1)
 
 
-def get_last_commit_message():
-    import subprocess
-
-    try:
-        return subprocess.check_output(
-            ["git", "log", "-1", "--pretty=%B"], universal_newlines=True
-        ).strip()
-    except subprocess.CalledProcessError:
-        return "Unknown"
-
-
-def get_version():
-    import importlib.metadata
-
-    return importlib.metadata.version("vmc")
-
-
 @cli.command()
 @click.option("--port", "-p", default=8080)
 def dashboard(port: int):
@@ -117,11 +100,8 @@ def start_server(port: int | None = None, reload: bool = False):
     workers = os.getenv("VMC_WORKERS", 1)
     host = os.getenv("VMC_PROXY_HOST", "localhost")
     port = port or os.getenv("VMC_PROXY_PORT", 8000)
-    title = f"VMC {get_version()} started"
-    msg = get_last_commit_message()
     from rich import print
 
-    print(f"[bold green]{title}[/bold green]\n{msg}")
     if not reload:
         cmd = [
             "gunicorn",

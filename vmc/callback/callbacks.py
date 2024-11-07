@@ -4,10 +4,10 @@ from vmc.callback.base import VMCCallback
 
 
 class LoggingCallback(VMCCallback):
-    async def on_startup(self):
-        print("✅ Server started!")
+    async def on_startup(self, title=None, message=None, **kwargs):
+        print("✅ On Server start!")
 
-    async def on_shutdown(self):
+    async def on_shutdown(self, title=None, message=None, **kwargs):
         print("❌ Server stopped!")
 
     async def on_generation_start(self, *args, **kwargs):
