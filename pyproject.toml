@@ -27,9 +27,11 @@ slark = "^0.1.4"
 numpy = "<2"
 motor = "^3.6.0"
 werkzeug = "^3.1.2"
+srag = "^0.4.0"
 
 [tool.poetry.extras]
 local = ["transformers", "torch"]
+ui = ["srag", "nicegui"]
 
 [tool.poetry.group.dev.dependencies]
 pdoc = "^14.5.1"
@@ -43,11 +45,15 @@ jupyter = "^1.0.0"
 pytest = "^8.2.2"
 
 
-
 [tool.poetry.group.serve.dependencies]
 transformers = "^4.46.0"
 torch = "<2.3.0"
 sentence-transformers = "^3.2.1"
+
+
+[tool.poetry.group.ui.dependencies]
+srag = "^0.4.0"
+nicegui = "^2.5.0"
 
 [[tool.poetry.source]]
 name = "mirrors"

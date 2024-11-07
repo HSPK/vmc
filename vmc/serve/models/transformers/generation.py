@@ -72,7 +72,7 @@ class TransformerGeneration(BaseGenerationModel):
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_id, trust_remote_code=True)
         self.max_length = max_length
 
-    def prepare_input_chat_template(self, content: Union[str, Iterable[GenerationMessageParam]]):
+    def prepare_input(self, content: Union[str, Iterable[GenerationMessageParam]]):
         if isinstance(content, str):
             content = [{"role": "user", "content": content}]
         input_dict = self.tokenizer.apply_chat_template(
@@ -97,7 +97,7 @@ class TransformerGeneration(BaseGenerationModel):
         if kwargs:
             logger.warning(f"{self.model_id} Unused kwargs: {kwargs}")
         created = time.time()
-        inputs = self.prepare_input_chat_template(content)
+        inputs = self.prepare_input(content)
         input_ids = inputs["input_ids"]
         response_ids = self.model.generate(
             **inputs.to(self.device),
@@ -156,7 +156,7 @@ class TransformerGeneration(BaseGenerationModel):
         if kwargs:
             logger.warning(f"{self.model_id} Unused kwargs: {kwargs}")
         created = time.time()
-        inputs = self.prepare_input_chat_template(content)
+        inputs = self.prepare_input(content)
         streamer = TextIteratorStreamer(
             self.tokenizer,
             skip_prompt=True,
@@ -219,5 +219,5 @@ class TransformerGeneration(BaseGenerationModel):
     ) -> TokenizeOutput:
         if kwargs:
             logger.warning(f"{self.model_id} Unused kwargs: {kwargs}")
-        tokens = self.prepare_input_chat_template(content)["input_ids"]
+        tokens = self.prepare_input(content)["input_ids"]
         return TokenizeOutput(tokens=tokens, length=[len(tok) for tok in tokens])
