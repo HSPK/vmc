@@ -21,10 +21,10 @@ class LoggingCallback(VMCCallback):
         print("❌ Generation failed!")
 
     async def on_embedding_start(self, model, content, **kwargs):
-        print("🚀 Embedding started!")
+        print(f"🚀 Embedding for {current_user.username} started!")
 
     async def on_embedding_end(self, model, output):
-        print("🎉 Embedding finished!")
+        print(f"🎉 Embedding for {current_user.username} finished!")
 
     async def on_rerank_start(self, model, content, **kwargs):
         print("🚀 Rerank started!")
