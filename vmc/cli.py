@@ -58,7 +58,7 @@ def serve(
     if reload:
         cmd = [
             "uvicorn",
-            "vmc.serve.server:create_app",
+            "vmc.serve.server:app",
             "--reload",
             "--host",
             host,
@@ -76,8 +76,7 @@ def serve(
             "info",
             "--timeout",
             "300",
-            # "--factory",
-            "vmc.serve.server:create_app",
+            "vmc.serve.server:app",
         ]
 
     try:

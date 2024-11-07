@@ -18,12 +18,7 @@ from vmc.types.errors._base import VMCException
 from vmc.types.errors.message import ErrorMessage
 from vmc.types.errors.status_code import HTTP_CODE as s
 from vmc.types.errors.status_code import VMC_CODE as v
-
-
-def get_version():
-    import importlib.metadata
-
-    return importlib.metadata.version("vmc")
+from vmc.utils import get_version
 
 
 async def app_startup():
