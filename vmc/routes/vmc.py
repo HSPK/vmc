@@ -75,6 +75,6 @@ async def image_upload(file: UploadFile = File(...)):
     return ImageUploadOutput(id=metadata["id"])
 
 
-@router.get("/alive")
-async def ping():
-    return BaseOutput(msg="vmc is alive")
+@router.get("/health")
+async def health():
+    return BaseOutput(msg="ok")

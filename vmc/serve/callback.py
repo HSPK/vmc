@@ -38,13 +38,14 @@ class ServeAppLifeSpan(VMCCallback):
 
     async def on_shutdown(self, title=None, message=None, **kwargs):
         name = os.getenv("SERVE_NAME")
+        type = os.getenv("SERVE_TYPE")
         await vmm.offload(name, type=type)
 
 
 def init_callback(cb_ids: list[str]):
     callbacks = []
     for cb_id in cb_ids:
-        if cb_id == "app_lifespan":
+        if cb_id == "lifespan":
             callbacks.append(ServeAppLifeSpan())
         elif cb_id == "logging":
             callbacks.append(LoggingCallback())

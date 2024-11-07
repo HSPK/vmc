@@ -22,13 +22,13 @@ __exception_map = {
 
 
 async def exception_handler(exc: Exception):
-    await callback.on_exception(None, exc)
+    tb = traceback.format_exc()
+    await callback.on_exception(None, exc, tb=tb)
     if isinstance(exc, err.VMCException):
         return ErrorMessage(status_code=exc.code, code=exc.vmc_code, msg=exc.msg)
     if exc.__class__ in __exception_map:
         code, vmc_code = __exception_map[exc.__class__]
         return ErrorMessage(status_code=code, code=vmc_code, msg=str(exc))
     code, vmc_code = s.INTERNAL_ERROR, v.INTERNAL_ERROR
-    tb = traceback.format_exc()
     logger.exception(exc)
     return ErrorMessage(status_code=code, code=vmc_code, msg=str(exc) + "\n" + tb)

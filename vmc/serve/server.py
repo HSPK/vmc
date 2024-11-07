@@ -25,13 +25,13 @@ API_KEY = os.getenv("SERVE_API_KEY")
 async def on_startup():
     callbacks = os.getenv("VMC_SERVE_CALLBACKS")
     if not callbacks:
-        callbacks = os.getenv("VMC_PROXY_CALLBACKS")
+        callbacks = os.getenv("VMC_CALLBACKS")
     if not callbacks:
-        callbacks = ["app_lifespan"]
+        callbacks = ["lifespan"]
     else:
         callbacks = callbacks.split(",")
-    if "proxy_app_lifespan" not in callbacks:
-        callbacks.append("app_lifespan")
+    if "lifespan" not in callbacks:
+        callbacks.append("lifespan")
     init_callback(callbacks)
     serve_model_name = os.getenv("SERVE_NAME")
     await callback.on_startup(
@@ -52,7 +52,9 @@ async def on_shutdown():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await on_startup()
     yield
+    await on_shutdown()
 
 
 app = FastAPI(lifespan=lifespan)

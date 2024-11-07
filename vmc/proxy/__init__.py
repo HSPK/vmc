@@ -13,4 +13,6 @@ def _get_vmm():
 
 def init_vmm(vmm: VirtualModelManager):
     global _vmm
+
     _vmm = vmm
+    assert _vmm is not None, "Cannot initialize VMM with None"

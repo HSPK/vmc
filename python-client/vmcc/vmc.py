@@ -12,6 +12,7 @@ class VMC:
         self.rerank = _sync.rerank
         self.tokenize = _sync.tokenize
         self.transcribe = _sync.transcribe
+        self.health = _sync.health
         self.supported_models = _sync.supported_models
 
         self.agenerate = _async.generate
@@ -20,3 +21,4 @@ class VMC:
         self.arerank = _async.rerank
         self.atokenize = _async.tokenize
         self.atranscribe = _async.transcribe
+        self.ahealth = _async.health

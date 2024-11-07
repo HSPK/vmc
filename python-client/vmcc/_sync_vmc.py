@@ -14,6 +14,7 @@ from vmcc.types import (
     TokenizeOutput,
     Transcription,
 )
+from vmcc.types._base import BaseOutput
 from vmcc.types.generation.generation_params import (
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
@@ -312,6 +313,9 @@ class SyncVMC:
             cast_to=Transcription,
             options={"timeout": timeout},
         )
+
+    def health(self):
+        return self._get("health", cast_to=BaseOutput).msg == "ok"
 
     @property
     def supported_models(self) -> Dict[str, ModelInfo]:

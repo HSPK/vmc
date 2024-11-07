@@ -14,6 +14,8 @@ class VMC:
 
     def __getattr__(self, name):
         """Redirects all calls to the VMC server"""
+        if name in ["health"]:
+            return super().__getattribute__(name)
 
         async def _(**kwargs):
             req = request.get()
@@ -26,7 +28,11 @@ class VMC:
             try:
                 res = await self.client.send(http_req, stream=True)
             except Exception:
-                raise VMCException(http_code=500, vmc_code=500, msg="Failed to connect to VMC")
+                raise VMCException(
+                    http_code=500,
+                    vmc_code=500,
+                    msg="Failed to connect to VMC Serve Server, please reload it.",
+                )
             return StreamingResponse(
                 content=res.aiter_text(),
                 headers=res.headers,
@@ -35,3 +41,13 @@ class VMC:
             )
 
         return _
+
+    async def health(self):
+        try:
+            res = await self.client.get("health")
+            res.raise_for_status()
+            assert "msg" in res.json()
+            assert res.json()["msg"] == "ok"
+        except Exception:
+            return False
+        return True

@@ -21,5 +21,7 @@ class LarkNotify(VMCCallback):
 
     async def on_exception(self, request: Request, exc: Exception, **kwargs):
         await self.lark.webhook.post_error_card(
-            msg=str(exc), traceback=kwargs.get("tb", ""), title=exc.__class__.__name__
+            msg=exc.msg if hasattr(exc, "msg") else str(exc),
+            traceback=kwargs.get("tb", ""),
+            title=exc.__class__.__name__,
         )

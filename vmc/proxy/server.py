@@ -22,14 +22,16 @@ from vmc.utils import get_version
 
 
 async def app_startup():
-    proxy_callbacks = os.getenv("VMC_PROXY_CALLBACKS")
-    if not proxy_callbacks:
-        proxy_callbacks = ["proxy_app_lifespan"]
+    callbacks = os.getenv("VMC_PROXY_CALLBACKS")
+    if not callbacks:
+        callbacks = os.getenv("VMC_CALLBACKS")
+    if not callbacks:
+        callbacks = ["lifespan"]
     else:
-        proxy_callbacks = proxy_callbacks.split(",")
-    if "proxy_app_lifespan" not in proxy_callbacks:
-        proxy_callbacks.append("proxy_app_lifespan")
-    init_callback(proxy_callbacks)
+        callbacks = callbacks.split(",")
+    if "lifespan" not in callbacks:
+        callbacks.append("lifespan")
+    init_callback(callbacks)
     await callback.on_startup(
         title=f"VMC Proxy v{get_version()} Started",
         message="For more information, please visit xxx",

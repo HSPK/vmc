@@ -21,7 +21,7 @@ class ProxyAppLifeSpan(VMCCallback):
 def init_callback(cb_ids: list[str]):
     callbacks = []
     for cb_id in cb_ids:
-        if cb_id == "proxy_app_lifespan":
+        if cb_id == "lifespan":
             callbacks.append(ProxyAppLifeSpan())
         elif cb_id == "logging":
             callbacks.append(LoggingCallback())

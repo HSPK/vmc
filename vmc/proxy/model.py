@@ -4,6 +4,7 @@ import time
 from enum import Enum
 
 import vmc.models as api_module
+from vmc.models import VMC
 from vmc.types.model_config import ModelConfig
 
 
@@ -81,11 +82,13 @@ class ProxyModel:
                 **{"credentials": self.credentials, **self.init_kwargs, "config": self.model}
             )
 
-    def alive(self):
+    async def alive(self):
+        if isinstance(self._model, VMC):
+            return await self._model.health()
         return self._model is not None
 
     async def offload(self):
-        if not self.alive():
+        if not await self.alive():
             return
         if self.physical:
             del self._model
@@ -97,7 +100,7 @@ class ProxyModel:
 
     def __getattr__(self, name):
         async def wrapper(*args, **kwargs):
-            if not self.alive():
+            if not await self.alive():
                 await self.load()
             if not self.ratelimiter():
                 await asyncio.sleep(self.ratelimiter.next_available_wait_time)

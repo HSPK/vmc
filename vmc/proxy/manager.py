@@ -116,9 +116,14 @@ class VirtualModelManager:
                 type=type,
                 is_local=True,
             )
-            model_configs = {uniform(f"{type}/{name}"): model_config}
-            credentials = {uniform(f"{type}/{name}"): []}
-            obj = cls(model_configs, credentials)
+            validated_config: dict[str, ValidationResult] = {
+                uniform(f"{type}/{name}"): {
+                    "config": model_config,
+                    "credentials": [],
+                    "common_init_kwargs": {},
+                }
+            }
+            obj = cls(validated_config)
             await obj.load(f"{type}/{name}", physical=True)
             return obj
         else:
@@ -189,6 +194,8 @@ class VirtualModelManager:
             _id_candidates = [
                 uniform(f"{t}/{id}") for t in ["chat", "embedding", "reranker", "audio"]
             ]
+        else:
+            _id_candidates = [uniform(f"{type}/{id}")]
         for _id in _id_candidates:
             if _id in self.loaded_models:
                 break

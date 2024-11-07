@@ -10,7 +10,7 @@ async def load_local_model(model: ModelConfig):
     global _client
     if _client is None:
         _client = ManagerClient()
-    assert await _client.health(), "Manager is not running"
+    await _client.health()
     port = find_available_port()
     load_method = model.load_method or "tf"
     res = await _client.serve(

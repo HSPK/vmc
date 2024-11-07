@@ -13,6 +13,7 @@ from vmcc.types import (
     TokenizeOutput,
     Transcription,
 )
+from vmcc.types._base import BaseOutput
 from vmcc.types.generation.generation_params import (
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
@@ -312,6 +313,9 @@ class AsyncVMC:
             cast_to=Transcription,
             options={"timeout": timeout},
         )
+
+    async def health(self):
+        return self._get("health", cast_to=BaseOutput).msg == "ok"
 
     async def get_supported_models(self) -> ModelInfoOutput:
         response = await self._get("models", cast_to=ModelInfoOutput)

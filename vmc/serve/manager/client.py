@@ -49,5 +49,5 @@ class ManagerClient:
             response = await self.client.get("/health")
             response.raise_for_status()
             return response.json()
-        except Exception as e:
-            raise ServeError(msg=str(e))
+        except Exception:
+            raise ServeError(msg="Serve Manager not started") from None
