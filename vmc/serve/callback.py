@@ -8,6 +8,7 @@ from vmc.callback import (
     VMCCallbackGroup,
     set_callback,
 )
+from vmc.db import init_db, init_storage
 from vmc.proxy import init_vmm, vmm
 from vmc.proxy.manager import VirtualModelManager
 
@@ -35,6 +36,8 @@ class ServeAppLifeSpan(VMCCallback):
                 device_map_auto=device_map_auto,
             )
         )
+        init_storage()
+        init_db()
 
     async def on_shutdown(self, title=None, message=None, **kwargs):
         name = os.getenv("SERVE_NAME")

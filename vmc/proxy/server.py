@@ -11,6 +11,8 @@ from zhipuai import ZhipuAIError
 
 from vmc.callback import callback
 from vmc.context.request import request as request_context
+from vmc.context.user import set_user
+from vmc.db import db
 from vmc.exception import exception_handler
 from vmc.proxy.callback import init_callback
 from vmc.routes import openai, vmc
@@ -36,6 +38,7 @@ async def app_startup():
         title=f"VMC Proxy v{get_version()} Started",
         message="For more information, please visit xxx",
     )
+    await db.add_user("admin", "admin", "admin")
 
 
 async def app_shutdown():
@@ -75,11 +78,30 @@ async def handle_exception(request: Request, exc: Exception):
     return msg.to_response()
 
 
+IGNORE_PATHS = ["/docs", "/openapi.json"]
+
+
+async def check_user(auth: str | None):
+    if not auth:
+        return None
+    user = await db.get_user_by_token(auth)
+    if not user:
+        return None
+    set_user(user)
+    return user
+
+
 @app.middleware("http")
 async def validate_token(request: Request, call_next):
     request.scope["body"] = await request.body()
     request_context.set(request)
-    return await call_next(request)
+    if request.url.path in IGNORE_PATHS:
+        return await call_next(request)
+    if await check_user(request.headers.get("Authorization")):
+        return await call_next(request)
+    return ErrorMessage(
+        status_code=s.UNAUTHORIZED, code=v.UNAUTHORIZED, msg="Unauthorized"
+    ).to_response()
 
 
 async def default_exception_handler(request: Request, exc: Exception):

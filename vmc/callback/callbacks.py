@@ -1,6 +1,7 @@
 from rich import print
 
 from vmc.callback.base import VMCCallback
+from vmc.context.user import current_user
 
 
 class LoggingCallback(VMCCallback):
@@ -11,10 +12,10 @@ class LoggingCallback(VMCCallback):
         print("❌ Server stopped!")
 
     async def on_generation_start(self, *args, **kwargs):
-        print("🚀 Generation started!")
+        print(f"🚀 Generation for {current_user.username} started!")
 
     async def on_generation_end(self, *args, **kwargs):
-        print("🎉 Generation finished!")
+        print(f"🎉 Generation for {current_user.username} finished!")
 
     async def on_generation_failed(self, *args, **kwargs):
         print("❌ Generation failed!")

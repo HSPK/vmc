@@ -19,5 +19,5 @@ class MongoDB(BaseDB):
         self.client = AsyncIOMotorClient(url)
         self.db = self.client[db]
 
-    async def get(self, table_name: str, key: str, cast_to: Type[ItemT]):
+    async def get_by_id(self, table_name: str, key: str, cast_to: Type[ItemT]):
         pass

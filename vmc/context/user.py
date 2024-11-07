@@ -1,14 +1,17 @@
 from contextvars import ContextVar
-from dataclasses import dataclass
+
+# Import LocalProxy from werkzeug.local to create a proxy object
+from werkzeug.local import LocalProxy
+
+from vmc.db.schema import User
+
+current_user: User = LocalProxy(lambda: _get_user())
+_current_user: ContextVar[User] = ContextVar("current_user", default=None)
 
 
-# The context variable for the current user.
-@dataclass
-class User:
-    id: str
-    name: str
-    email: str
-    role: str
+def _get_user():
+    return _current_user.get()
 
 
-current_user: ContextVar[User] = ContextVar("current_user", default=User("", "", "", ""))
+def set_user(user: User):
+    _current_user.set(user)

@@ -6,6 +6,7 @@ from vmc.callback import (
     VMCCallbackGroup,
     set_callback,
 )
+from vmc.db import init_db, init_storage
 from vmc.proxy import init_vmm
 from vmc.proxy.manager import VirtualModelManager
 
@@ -15,6 +16,8 @@ class ProxyAppLifeSpan(VMCCallback):
         print("✅ Setting up models...")
         init_vmm(VirtualModelManager.from_yaml(None))
         print("✅ Initializing Database...")
+        init_db()
+        init_storage()
         print("✅ Done!")
 
 

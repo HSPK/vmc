@@ -4,6 +4,7 @@ from fastapi import Request
 from slark import AsyncLark
 
 from vmc.callback.base import VMCCallback
+from vmc.context.user import current_user
 
 
 class LarkNotify(VMCCallback):
@@ -23,5 +24,5 @@ class LarkNotify(VMCCallback):
         await self.lark.webhook.post_error_card(
             msg=exc.msg if hasattr(exc, "msg") else str(exc),
             traceback=kwargs.get("tb", ""),
-            title=exc.__class__.__name__,
+            title=f"{exc.__class__.__name__} (from {current_user.username})",
         )
