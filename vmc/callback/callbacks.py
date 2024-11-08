@@ -2,6 +2,7 @@ from rich import print
 
 from vmc.callback.base import VMCCallback
 from vmc.context.user import current_user
+from vmc.db import db
 
 
 class LoggingCallback(VMCCallback):
@@ -34,5 +35,14 @@ class LoggingCallback(VMCCallback):
 
 
 class SaveGenerationToDB(VMCCallback):
-    async def on_generation_finish(self, *args, **kwargs):
-        print("🎉 Saved to DB")
+    def __init__():
+        super().__init__(run_in_background=True)
+
+    async def on_generation_end(self, model, content, generation_kwargs, output, **kwargs):
+        db.save_generation(
+            user_id=current_user.id,
+            model_name=model.config.name,
+            content=content,
+            generation_kwargs=generation_kwargs,
+            generation=output,
+        )

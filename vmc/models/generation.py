@@ -154,12 +154,16 @@ class BaseGenerationModel(BaseModel, ABC):
                 async for t in self.stream(*args, **kwargs):
                     yield t
                     tokens.append(t)
-                await callback.on_generation_end(model=self, output=tokens)
+                await callback.on_generation_end(
+                    model=self, content=content, generation_kwargs=params, output=tokens
+                )
 
             return streaming(**params)
         await callback.on_generation_start(model=self, **params)
         res = await self.generate(**params)
-        await callback.on_generation_end(model=self, output=res)
+        await callback.on_generation_end(
+            model=self, content=content, generation_kwargs=params, output=res
+        )
         return res
 
     async def tokenize(

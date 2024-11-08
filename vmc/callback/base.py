@@ -6,7 +6,8 @@ from loguru import logger
 
 from vmc.types.audio import Transcription
 from vmc.types.embedding import EmbeddingResponse
-from vmc.types.generation import ContentType, Generation, GenerationChunk
+from vmc.types.generation import Generation, GenerationChunk
+from vmc.types.generation.message_params import GenerationMessageParam
 from vmc.types.rerank import RerankOutput
 
 if TYPE_CHECKING:
@@ -24,12 +25,17 @@ class VMCCallback:
         pass
 
     async def on_generation_start(
-        self, model: "BaseModel", content: Union[str, list[ContentType]], **kwargs
+        self, model: "BaseModel", content: Union[str, list[GenerationMessageParam]], **kwargs
     ):
         pass
 
     async def on_generation_end(
-        self, model: "BaseModel", output: Generation | list[GenerationChunk]
+        self,
+        model: "BaseModel",
+        content: Union[str, list[GenerationMessageParam]],
+        generation_kwargs: dict,
+        output: Generation | list[GenerationChunk],
+        **kwargs,
     ):
         pass
 

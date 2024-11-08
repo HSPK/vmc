@@ -4,6 +4,9 @@ from pydantic import BaseModel
 from typing_extensions import Literal
 
 from vmc.db.schema import Generation, User
+from vmc.types.generation import Generation as GenerationType
+from vmc.types.generation import GenerationChunk
+from vmc.types.generation.message_params import GenerationMessageParam
 from vmc.utils import sha256
 
 ItemT = TypeVar(
@@ -61,14 +64,33 @@ class UserOpMixin:
 
 
 class GenerationOpMixin:
-    async def save_generation(self, generation: Generation):
-        await self.insert("generations", generation)
+    async def save_generation(
+        self,
+        user_id: str,
+        model_name: str,
+        content: str | list[GenerationMessageParam],
+        generation_kwargs: dict,
+        generation: GenerationType | list[GenerationChunk],
+    ) -> Generation:
+        await self.insert(
+            "generations",
+            Generation(
+                user_id=user_id,
+                model_name=model_name,
+                content=content,
+                generation_kwargs=generation_kwargs,
+                generation=generation,
+            ),
+        )
 
     async def get_generation(self, key: str) -> Generation:
         return await self.get_by_id("generations", key, Generation)
 
     async def delete_generation(self, key: str):
         await self.delete_by_id("generations", key)
+
+    async def list_generations(self, user_id: str, page: int, page_size: int) -> List[Generation]:
+        pass
 
 
 class BaseDB(UserOpMixin, GenerationOpMixin):

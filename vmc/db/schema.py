@@ -1,3 +1,4 @@
+import time
 import uuid
 
 import pydantic
@@ -5,10 +6,13 @@ from typing_extensions import Literal
 
 from vmc.types.generation import Generation as GenerationType
 from vmc.types.generation import GenerationChunk
+from vmc.types.generation.message_params import GenerationMessageParam
 
 
 class BaseModel(pydantic.BaseModel):
     id: str = pydantic.Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: float = pydantic.Field(default_factory=lambda: time.time())
+    updated_at: float = pydantic.Field(default_factory=lambda: time.time())
 
 
 class User(BaseModel):
@@ -19,6 +23,7 @@ class User(BaseModel):
 
 class Generation(BaseModel):
     user_id: str
-    is_streaming: bool = False
-    generation_type: Literal["text", "image"] = "text"
+    model_name: str
+    content: str | list[GenerationMessageParam]
+    generation_kwargs: dict
     generation: GenerationType | list[GenerationChunk]
