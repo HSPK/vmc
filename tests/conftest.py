@@ -3,7 +3,7 @@ import os
 import openai
 import pytest
 from dotenv import find_dotenv, load_dotenv
-from vmcc import VMC
+from vmc_client import VMC
 
 load_dotenv(find_dotenv())
 

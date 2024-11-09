@@ -6,7 +6,12 @@ from typing import Dict, Optional
 
 from typing_extensions import Literal, Required, TypedDict
 
-__all__ = ["ResponseFormatText", "ResponseFormatJSONObject", "ResponseFormatJSONSchema", "JSONSchema"]
+__all__ = [
+    "ResponseFormatText",
+    "ResponseFormatJSONObject",
+    "ResponseFormatJSONSchema",
+    "JSONSchema",
+]
 
 
 class ResponseFormatText(TypedDict, total=False):

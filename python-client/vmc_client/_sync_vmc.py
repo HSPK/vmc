@@ -4,25 +4,26 @@ from typing import Any, Dict, Iterable, List, Literal, Optional, Union
 
 import httpx
 
-from vmcc.types import (
+from vmc_client.types import (
     EmbeddingResponse,
     Generation,
     GenerationChunk,
+    ModelInfo,
     ModelInfoOutput,
     RerankOutput,
     TokenizeOutput,
     Transcription,
 )
-from vmcc.types._base import BaseOutput
-from vmcc.types.generation.generation_params import (
+from vmc_client.types._base import BaseOutput
+from vmc_client.types.generation.generation_params import (
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
     GenerationMessageParam,
     ResponseFormat,
 )
 
-from ._async_client import AsyncAPIClient
 from ._constants import DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT
+from ._sync_client import SyncAPIClient
 from .types._types import NOT_GIVEN, NotGiven
 
 
@@ -30,7 +31,7 @@ def filter_not_given(kwargs: Dict[str, Any]) -> Dict[str, Any]:
     return {k: v for k, v in kwargs.items() if v is not NOT_GIVEN}
 
 
-class AsyncVMC:
+class SyncVMC:
     def __init__(
         self,
         host: Optional[str] = None,
@@ -52,25 +53,25 @@ class AsyncVMC:
             "auth_headers": {"Authorization": f"{username}:{password}"},
         }
         self._default_model = model
-        self._client = AsyncAPIClient(**params)
+        self._client = SyncAPIClient(**params)
         self._get = self._client.get
         self._post = self._client.post
         self._stream = self._client.stream
 
-    async def _process_prompt(self, content: GenerationMessageParam):
+    def _process_prompt(self, content: GenerationMessageParam):
         if isinstance(content, str):
-            content = await self._replace_image_with_id(content)
+            content = self._replace_image_with_id(content)
         return content
 
-    async def _upload_image(self, image_path: str):
-        res = await self._post(
+    def _upload_image(self, image_path: str):
+        res = self._post(
             "image/upload",
             options={"files": {"file": open(image_path, "rb")}},
             cast_to=Dict,
         )
         return res.json()["id"]
 
-    async def _replace_image_with_id(self, s: str):
+    def _replace_image_with_id(self, s: str):
         """extract image path from a markdown string"""
         import re
 
@@ -80,7 +81,7 @@ class AsyncVMC:
         image_path = match.group(2)
         if not os.path.exists(image_path):
             return s
-        image_id = await self._upload_image(image_path)
+        image_id = self._upload_image(image_path)
         return f"![{match.group(1)}]({image_id})"
 
     def tokenize(
@@ -109,7 +110,7 @@ class AsyncVMC:
         )
         return res
 
-    async def generate(
+    def generate(
         self,
         content: Union[str, Iterable[GenerationMessageParam]],
         *,
@@ -137,11 +138,11 @@ class AsyncVMC:
         return_original_response: bool | NotGiven = NOT_GIVEN,
         **kwargs,
     ) -> Generation:
-        return await self._post(
+        return self._post(
             "generate",
             body=filter_not_given(
                 {
-                    "content": await self._process_prompt(content),
+                    "content": self._process_prompt(content),
                     "model": self._default_model,
                     "frequency_penalty": frequency_penalty,
                     "logit_bias": logit_bias,
@@ -171,7 +172,7 @@ class AsyncVMC:
             options={"timeout": timeout},
         )
 
-    async def stream(
+    def stream(
         self,
         content: Union[str, Iterable[GenerationMessageParam]],
         *,
@@ -199,11 +200,11 @@ class AsyncVMC:
         return_original_response: bool | NotGiven = NOT_GIVEN,
         **kwargs,
     ):
-        async for t in await self._stream(
+        return self._stream(
             "generate",
             body=filter_not_given(
                 {
-                    "content": await self._process_prompt(content),
+                    "content": self._process_prompt(content),
                     "model": self._default_model,
                     "frequency_penalty": frequency_penalty,
                     "logit_bias": logit_bias,
@@ -232,10 +233,9 @@ class AsyncVMC:
             ),
             cast_to=GenerationChunk,
             options={"timeout": timeout},
-        ):
-            yield t
+        )
 
-    async def embedding(
+    def embedding(
         self,
         content: Union[str, List[str]],
         *,
@@ -247,7 +247,7 @@ class AsyncVMC:
         timeout: float | httpx.Timeout | None = None,
         **kwargs,
     ) -> EmbeddingResponse:
-        return await self._post(
+        return self._post(
             "embedding",
             body=filter_not_given(
                 {
@@ -264,7 +264,7 @@ class AsyncVMC:
             options={"timeout": timeout},
         )
 
-    async def rerank(
+    def rerank(
         self,
         content: List[List[str]],
         *,
@@ -273,7 +273,7 @@ class AsyncVMC:
         timeout: Optional[httpx.Timeout] = None,
         **kwargs,
     ) -> RerankOutput:
-        return await self._post(
+        return self._post(
             "rerank",
             body=filter_not_given(
                 {
@@ -287,7 +287,7 @@ class AsyncVMC:
             options={"timeout": timeout},
         )
 
-    async def transcribe(
+    def transcribe(
         self,
         file: Union[str, TextIOWrapper],
         *,
@@ -300,7 +300,7 @@ class AsyncVMC:
         if isinstance(file, str):
             file = open(file, "rb")
 
-        return await self._post(
+        return self._post(
             "audio/transcriptions",
             files={"file": file},
             data=filter_not_given(
@@ -314,9 +314,13 @@ class AsyncVMC:
             options={"timeout": timeout},
         )
 
-    async def health(self):
+    def health(self):
         return self._get("health", cast_to=BaseOutput).msg == "ok"
 
-    async def get_supported_models(self) -> ModelInfoOutput:
-        response = await self._get("models", cast_to=ModelInfoOutput)
+    @property
+    def supported_models(self) -> Dict[str, ModelInfo]:
+        return self._get_supported_models()
+
+    def _get_supported_models(self) -> ModelInfoOutput:
+        response = self._get("models", cast_to=ModelInfoOutput)
         return response.models

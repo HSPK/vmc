@@ -4,6 +4,7 @@ from typing_extensions import Literal, override
 
 _T = TypeVar("_T")
 
+
 class NotGiven:
     """
     A sentinel singleton class used to distinguish omitted keyword arguments

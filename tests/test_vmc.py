@@ -1,6 +1,6 @@
 import asyncio
 
-from vmcc import VMC
+from vmc_client import VMC
 
 vmc = VMC("http://localhost:8000")
 

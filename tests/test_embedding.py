@@ -1,5 +1,5 @@
 from openai import OpenAI
-from vmcc import VMC
+from vmc_client import VMC
 
 
 def test_bge_m3(client: VMC, oc: OpenAI):

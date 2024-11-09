@@ -40,4 +40,3 @@ class GenerationParams(TypedDict, total=False):
     user: str
     stream: bool
     return_original_response: bool
-

@@ -1,5 +1,5 @@
-from vmcc._async_vmc import AsyncVMC
-from vmcc._sync_vmc import SyncVMC
+from vmc_client._async_vmc import AsyncVMC
+from vmc_client._sync_vmc import SyncVMC
 
 
 class VMC:

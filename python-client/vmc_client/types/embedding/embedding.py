@@ -40,6 +40,5 @@ class EmbeddingResponse(BaseOutput):
 
     cost: Cost | None = None
     """The usage information for the request."""
-    
+
     original_response: dict | None = None
-    

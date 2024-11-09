@@ -1,6 +1,6 @@
 from loguru import logger
 from openai import OpenAI
-from vmcc import VMC, SystemMessage, UserMessage
+from vmc_client import VMC, SystemMessage, UserMessage
 
 prompt = "hello"
 parameters = {
@@ -23,9 +23,7 @@ def test_supported_models(client: VMC):
     global api_chat_models
     assert isinstance(client.supported_models, dict)
     api_chat_models = [
-        k
-        for k, v in client.supported_models.items()
-        if "chat" in v.types and not v.is_local
+        k for k, v in client.supported_models.items() if "chat" in v.types and not v.is_local
     ]
 
 
