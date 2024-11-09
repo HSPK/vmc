@@ -23,7 +23,7 @@ async def load_local_model(model: ModelConfig):
         device_map_auto=model.device_map_auto,
         gpu_limit=model.gpu_limit,
     )
-    port = res["port"]
+    port = res.port
     if load_method == "tf":
         return VMC(port=port)
     else:
