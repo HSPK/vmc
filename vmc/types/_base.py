@@ -5,7 +5,10 @@ from typing_extensions import ClassVar
 
 class BaseModel(pydantic.BaseModel):
     model_config: ClassVar[pydantic.ConfigDict] = pydantic.ConfigDict(
-        extra="allow", use_enum_values=True, protected_namespaces=()
+        extra="allow",
+        use_enum_values=True,
+        protected_namespaces=(),
+        arbitrary_types_allowed=True,
     )
 
     def to_event(self, prefix: str = "data: ", sep: str = "\n\n") -> str:

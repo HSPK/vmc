@@ -9,12 +9,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from openai._exceptions import OpenAIError
 from zhipuai import ZhipuAIError
 
-from vmc.callback import callback
+from vmc.callback import callback, init_callback
 from vmc.context.request import request as request_context
 from vmc.context.user import set_user
-from vmc.db import db
+from vmc.db import db, init_db, init_storage
 from vmc.exception import exception_handler
-from vmc.proxy.callback import init_callback
+from vmc.proxy import init_vmm
+from vmc.proxy.manager import VirtualModelManager
 from vmc.routes import openai, vmc
 from vmc.types.errors._base import VMCException
 from vmc.types.errors.message import ErrorMessage
@@ -24,21 +25,23 @@ from vmc.utils import get_version
 
 
 async def app_startup():
+    print("✅ Setting up models...")
+    init_vmm(VirtualModelManager.from_yaml(None))
+    print("✅ Initializing Database...")
+    init_db()
+    init_storage()
+    print("✅ Setting up callbacks...")
     callbacks = os.getenv("VMC_PROXY_CALLBACKS")
     if not callbacks:
         callbacks = os.getenv("VMC_CALLBACKS")
-    if not callbacks:
-        callbacks = ["lifespan"]
-    else:
-        callbacks = callbacks.split(",")
-    if "lifespan" not in callbacks:
-        callbacks.append("lifespan")
+    callbacks = callbacks.split(",")
     init_callback(callbacks)
     await callback.on_startup(
         title=f"VMC Proxy v{get_version()} Started",
         message="For more information, please visit xxx",
     )
     await db.add_user("admin", "admin", "admin")
+    print("✅ Done!")
 
 
 async def app_shutdown():

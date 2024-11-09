@@ -8,8 +8,11 @@ from loguru import logger
 from typing_extensions import TypedDict
 
 from vmc.serve import SERVER_FAILED_MSG, SERVER_STARTED_MSG
+from vmc.types._base import BaseOutput
+from vmc.types.errors.status_code import HTTP_CODE, VMC_CODE
+from vmc.types.serve.serve import ListServerInfo, ListServerResponse, ServeResponse
 
-from .params import BaseResponse, ServeParams, StatusCode, StopParams
+from .params import ServeParams, StopParams
 
 
 class ProcessInfo(TypedDict):
@@ -52,8 +55,10 @@ async def serve(params: ServeParams):
             params["device_map_auto"] = True
         gpus = get_freer_gpus(params["gpu_limit"])
         if not gpus:
-            return BaseResponse(
-                code=StatusCode.SERVE_ERROR, msg="No free GPUs available"
+            return BaseOutput(
+                status_code=HTTP_CODE.MODEL_LOAD_ERROR,
+                code=VMC_CODE.MODEL_LOAD_ERROR,
+                msg="No free GPUs available",
             ).to_response()
         envs["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, gpus))
     command = [
@@ -76,7 +81,7 @@ async def serve(params: ServeParams):
     if "device_map_auto" in params and params["device_map_auto"]:
         command += ["--device-map-auto"]
     if params["name"] in started_processes:
-        return BaseResponse(
+        return ServeResponse(
             port=started_processes[params["name"]]["params"]["port"],
             pid=started_processes[params["name"]]["process"].pid,
         )
@@ -90,10 +95,6 @@ async def serve(params: ServeParams):
                 stderr=f,
                 env=envs,
             )
-    except Exception as e:
-        logger.error(f"Failed to create process: {e}")
-        return BaseResponse(code=StatusCode.SERVE_ERROR, msg=str(e)).to_response()
-    try:
         load_success = False
         output = ""
         while True:
@@ -110,41 +111,48 @@ async def serve(params: ServeParams):
 
             await asyncio.sleep(0.5)
         if not load_success:
-            logger.error(f"Failed to load model: {output}")
-            return BaseResponse(
-                code=StatusCode.SERVE_ERROR, msg=f"Failed to load model: {output.decode()}"
+            with open(f"logs/{params['name']}.log", "r") as f:
+                msg = f.read()
+            return BaseOutput(
+                status_code=HTTP_CODE.MODEL_LOAD_ERROR, code=VMC_CODE.MODEL_LOAD_ERROR, msg=msg
             ).to_response()
     except Exception as e:
         logger.exception(e)
-        return BaseResponse(code=StatusCode.SERVE_ERROR, msg=str(e)).to_response()
+        return BaseOutput(
+            status_code=HTTP_CODE.MODEL_LOAD_ERROR, code=VMC_CODE.MODEL_LOAD_ERROR, msg=str(e)
+        ).to_response()
     started_processes[params["name"]] = {
         "process": process,
         "params": params,
         "pid": process.pid,
     }
-    return BaseResponse(
-        port=params["port"],
-        pid=process.pid,
-    )
+    return ServeResponse(port=params["port"], pid=process.pid)
 
 
 @app.post("/stop")
 async def stop(params: StopParams):
     name = params["name"]
     if name not in started_processes:
-        return BaseResponse(code=StatusCode.STOP_ERROR, msg=f"Model {name} not found")
+        return BaseOutput(
+            status_code=HTTP_CODE.MODEL_STOP_ERROR, code=VMC_CODE.MODEL_STOP_ERROR
+        ).to_response()
     p = started_processes.pop(name)["process"]
     logger.debug(f"Killing model {name} with pid {p.pid}")
     killpg(p.pid)
     logger.debug(f"Model {name} stopped")
-    return BaseResponse()
+    return BaseOutput()
 
 
 @app.get("/list")
 async def list_servers():
-    return {k: {"params": v["params"], "pid": v["pid"]} for k, v in started_processes.items()}
+    return ListServerResponse(
+        servers={
+            k: ListServerInfo(params=v["params"], pid=v["pid"])
+            for k, v in started_processes.items()
+        }
+    )
 
 
 @app.get("/health")
 async def health():
-    return BaseResponse()
+    return BaseOutput(msg="OK")

@@ -14,6 +14,8 @@ class BaseModel(pydantic.BaseModel):
     created_at: float = pydantic.Field(default_factory=lambda: time.time())
     updated_at: float = pydantic.Field(default_factory=lambda: time.time())
 
+    model_config = pydantic.ConfigDict(protected_namespaces=())
+
 
 class User(BaseModel):
     username: str
