@@ -5,9 +5,7 @@ from typing_extensions import Unpack
 from vmc.serve.manager.params import ServeParams
 from vmc.types._base import BaseOutput
 from vmc.types.serve.serve import ListServerResponse, ServeResponse
-
-from ._api_client import AsyncAPIClient
-from ._constants import DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT
+from vmc.utils.api_client import DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT, AsyncAPIClient
 
 
 class ManagerClient:

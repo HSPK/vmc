@@ -49,6 +49,7 @@ pytest = "^8.2.2"
 transformers = "^4.46.0"
 torch = "<2.3.0"
 sentence-transformers = "^3.2.1"
+optimum = {extras = ["onnxruntime"], version = "^1.23.3"}
 
 
 [tool.poetry.group.ui.dependencies]
