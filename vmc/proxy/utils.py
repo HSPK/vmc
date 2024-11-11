@@ -1,5 +1,5 @@
 from vmc.models import VMC
-from vmc.serve.manager.client.client import ManagerClient
+from vmc.serve.manager.client import ManagerClient
 from vmc.types.model_config import ModelConfig
 from vmc.utils import find_available_port
 

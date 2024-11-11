@@ -237,14 +237,19 @@ class AsyncVMC:
 
     async def embedding(
         self,
-        content: Union[str, List[str]],
+        content: Union[str, List[str], Iterable[int], Iterable[Iterable[int]]],
         *,
         model: str,
+        return_spase_embedding: bool | NotGiven = NOT_GIVEN,
+        return_original_response: bool | NotGiven = NOT_GIVEN,
+        dimensions: int | NotGiven = NOT_GIVEN,
         encoding_format: Literal["float", "base64"] | NotGiven = NOT_GIVEN,
         user: str | NotGiven = NOT_GIVEN,
-        dimensions: int | NotGiven = NOT_GIVEN,
-        return_sparse: bool | NotGiven = NOT_GIVEN,
-        timeout: float | httpx.Timeout | None = None,
+        task_type: str | NotGiven = NOT_GIVEN,
+        title: str | NotGiven = NOT_GIVEN,
+        batch_size: int | NotGiven = NOT_GIVEN,
+        normalize_embeddings: bool | NotGiven = NOT_GIVEN,
+        timeout: Optional[httpx.Timeout] = None,
         **kwargs,
     ) -> EmbeddingResponse:
         return await self._post(
@@ -253,10 +258,15 @@ class AsyncVMC:
                 {
                     "content": content,
                     "model": model,
+                    "return_spase_embedding": return_spase_embedding,
+                    "return_original_response": return_original_response,
+                    "dimensions": dimensions,
                     "encoding_format": encoding_format,
                     "user": user,
-                    "dimensions": dimensions,
-                    "return_sparse": return_sparse,
+                    "task_type": task_type,
+                    "title": title,
+                    "batch_size": batch_size,
+                    "normalize_embeddings": normalize_embeddings,
                     **kwargs,
                 }
             ),

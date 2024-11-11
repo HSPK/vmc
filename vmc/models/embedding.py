@@ -20,6 +20,8 @@ class BaseEmbeddingModel(BaseModel):
         user: str | NotGiven = NOT_GIVEN,
         task_type: str | NotGiven = NOT_GIVEN,
         title: str | NotGiven = NOT_GIVEN,
+        batch_size: int | NotGiven = NOT_GIVEN,
+        normalize_embeddings: bool | NotGiven = NOT_GIVEN,
         **kwargs,
     ) -> EmbeddingResponse:
         raise NotImplementedError("embedding is not implemented")
@@ -35,6 +37,8 @@ class BaseEmbeddingModel(BaseModel):
         user: str | NotGiven = NOT_GIVEN,
         task_type: str | NotGiven = NOT_GIVEN,
         title: str | NotGiven = NOT_GIVEN,
+        batch_size: int | NotGiven = NOT_GIVEN,
+        normalize_embeddings: bool | NotGiven = NOT_GIVEN,
         **kwargs,
     ) -> EmbeddingResponse:
         await callback.on_embedding_start(model=self, content=content, **kwargs)
@@ -48,6 +52,8 @@ class BaseEmbeddingModel(BaseModel):
                 user=user,
                 task_type=task_type,
                 title=title,
+                batch_size=batch_size,
+                normalize_embeddings=normalize_embeddings,
                 **kwargs,
             )
         )

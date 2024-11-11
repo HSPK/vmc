@@ -37,8 +37,8 @@ class TransformerEmbedding(BaseEmbeddingModel):
         self,
         content: Union[str, List[str], Iterable[int], Iterable[Iterable[int]]],
         *,
+        normalize_embeddings: bool = True,
         batch_size: int | NotGiven = NOT_GIVEN,
-        normalize_embeddings: bool | NotGiven = NOT_GIVEN,
         **kwargs,
     ) -> EmbeddingResponse:
         if kwargs:
@@ -47,10 +47,8 @@ class TransformerEmbedding(BaseEmbeddingModel):
         created = time.time()
         embeddings = self.model.encode(
             content,
-            **filter_notgiven(
-                batch_size=batch_size,
-                normalize_embeddings=normalize_embeddings,
-            ),
+            **filter_notgiven(batch_size=batch_size),
+            normalize_embeddings=normalize_embeddings,
         ).tolist()
         torch_gc()
         return EmbeddingResponse(

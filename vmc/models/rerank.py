@@ -5,7 +5,7 @@ from ._base import BaseModel
 
 
 class BaseRerankModel(BaseModel):
-    async def rerank(self, content: list[list[str]], **kwargs):
+    async def rerank(self, content: list[list[str]], **kwargs) -> RerankOutput:
         raise NotImplementedError("rerank method is not implemented")
 
     async def _rerank(self, content: list[list[str]], **kwargs) -> RerankOutput:
