@@ -13,10 +13,10 @@ from vmc.context.user import set_user
 from vmc.db import init_db, init_storage
 from vmc.db.schema import User
 from vmc.exception import exception_handler
-from vmc.proxy import init_vmm, vmm
-from vmc.proxy.manager import VirtualModelManager
+from vmc.proxy import vmm
 from vmc.routes import openai, vmc
 from vmc.serve import SERVER_STARTED_MSG
+from vmc.serve.vmm import init_serve_vmm
 from vmc.types.errors._base import VMCException
 from vmc.types.errors.message import ErrorMessage
 from vmc.types.errors.status_code import HTTP_CODE as s
@@ -27,27 +27,7 @@ API_KEY = os.getenv("SERVE_API_KEY")
 
 
 async def app_startup():
-    name = os.getenv("SERVE_NAME")
-    model_id = os.getenv("SERVE_MODEL_ID")
-    method = os.getenv("SERVE_METHOD", "config")
-    type = os.getenv("SERVE_TYPE")
-    backend = os.getenv("SERVE_BACKEND", "torch")
-    device_map_auto = os.getenv("SERVE_DEVICE_MAP_AUTO", "False")
-    device_map_auto = device_map_auto.lower() == "true"
-    assert name, "SERVE_NAME is not set"
-
-    if not model_id:
-        model_id = name
-    init_vmm(
-        await VirtualModelManager.from_serve(
-            name=name,
-            model_id=model_id,
-            method=method,
-            type=type,
-            backend=backend,
-            device_map_auto=device_map_auto,
-        )
-    )
+    await init_serve_vmm()
     init_storage()
     init_db()
 

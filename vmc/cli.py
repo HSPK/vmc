@@ -31,7 +31,7 @@ def cli():
 def serve(
     name: str,
     model_id: str,
-    method: Literal["config", "tf", "vllm", "ollama"],
+    method: Literal["config", "tf", "tei", "tgi", "vllm", "ollama"],
     type: Literal["chat", "embedding", "audio", "reranker"],
     backend: Literal["torch", "onnx", "openvino"],
     host: str,

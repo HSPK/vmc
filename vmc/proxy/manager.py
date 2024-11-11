@@ -67,68 +67,6 @@ class VirtualModelManager:
         validated_config = validate_models(Providers.from_yaml(path).providers)
         return cls(validated_config)
 
-    @classmethod
-    async def from_serve(
-        cls,
-        name: str,
-        model_id: str | None = None,
-        method: Literal["config", "tf", "ollama", "vllm"] = "config",
-        type: Literal["chat", "embedding", "audio", "reranker"] | None = None,
-        backend: Literal["torch", "onnx", "openvino"] = "torch",
-        device_map_auto: bool = False,
-    ):
-        model_id = model_id or name
-        if method == "config":
-            assert model_id == name, "model_id is not required for config method"
-            providers = Providers.from_yaml(None).providers
-            validated_config = validate_models(providers)
-            if type is None:
-                _id_candidates = [
-                    uniform(f"{t}/{name}") for t in ["chat", "embedding", "reranker", "audio"]
-                ]
-            else:
-                _id_candidates = [uniform(f"{type}/{name}")]
-            for _id in _id_candidates:
-                if _id in validated_config:
-                    break
-            else:
-                raise ModelNotFoundError(msg=f"{name} not found")
-            validated_config = {_id: validated_config[_id]}
-            obj = cls(validated_config)
-            await obj.load(_id, physical=True)
-            return obj
-        elif method == "tf":
-            assert type != "audio", "audio model is not supported"
-            model_class = {
-                "chat": "TransformerGeneration",
-                "embedding": "TransformerEmbedding",
-                "reranker": "TransformerReranker",
-            }[type]
-            init_kwargs = {"model_id": model_id}
-            if type == "embedding":
-                init_kwargs["backend"] = backend
-            if type == "chat":
-                init_kwargs["device_map"] = "auto" if device_map_auto else None
-            model_config = ModelConfig(
-                name=name,
-                model_class=model_class,
-                init_kwargs=init_kwargs,
-                type=type,
-                is_local=True,
-            )
-            validated_config: dict[str, ValidationResult] = {
-                uniform(f"{type}/{name}"): {
-                    "config": model_config,
-                    "credentials": [],
-                    "common_init_kwargs": {},
-                }
-            }
-            obj = cls(validated_config)
-            await obj.load(f"{type}/{name}", physical=True)
-            return obj
-        else:
-            raise ValueError(f"method {method} not supported")
-
     @property
     def models(self):
         return {m["config"].name: m["config"].dump() for m in self.model_configs.values()}
