@@ -42,8 +42,9 @@ async def on_startup():
     callbacks = os.getenv("VMC_SERVE_CALLBACKS")
     if not callbacks:
         callbacks = os.getenv("VMC_CALLBACKS")
-    callbacks = callbacks.split(",")
-    init_callback(callbacks)
+    if callbacks:
+        callbacks = callbacks.split(",")
+        init_callback(callbacks)
     serve_model_name = os.getenv("SERVE_NAME")
     await app_startup()
     await callback.on_startup(
