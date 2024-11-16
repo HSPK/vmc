@@ -49,18 +49,18 @@ async def init_vmm_from_transformers(
         name=name,
         model_class=model_class,
         init_kwargs=init_kwargs,
-        type=type,
+        type=model_type,
         is_local=True,
     )
     validated_config: dict[str, ValidationResult] = {
-        uniform(f"{type}/{name}"): {
+        uniform(f"{model_type}/{name}"): {
             "config": model_config,
             "credentials": [],
             "common_init_kwargs": {},
         }
     }
     obj = VirtualModelManager(validated_config)
-    await obj.load(f"{type}/{name}", physical=True)
+    await obj.load(f"{model_type}/{name}", physical=True)
     return obj
 
 
