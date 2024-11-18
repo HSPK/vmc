@@ -31,12 +31,12 @@ async def app_startup():
     init_db()
     init_storage()
     print("✅ Setting up callbacks...")
-    callbacks = os.getenv("VMC_PROXY_CALLBACKS")
+    callbacks = os.getenv("VMC_PROXY_CALLBACKS") or os.getenv("VMC_CALLBACKS")
     if not callbacks:
-        callbacks = os.getenv("VMC_CALLBACKS")
-    if callbacks:
+        callbacks = []
+    else:
         callbacks = callbacks.split(",")
-        init_callback(callbacks)
+    init_callback(callbacks)
     await callback.on_startup(
         title=f"VMC Proxy v{get_version()} Started",
         message="For more information, please visit xxx",

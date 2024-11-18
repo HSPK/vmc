@@ -39,12 +39,12 @@ async def app_shutdown():
 
 
 async def on_startup():
-    callbacks = os.getenv("VMC_SERVE_CALLBACKS")
+    callbacks = os.getenv("VMC_SERVE_CALLBACKS") or os.getenv("VMC_CALLBACKS")
     if not callbacks:
-        callbacks = os.getenv("VMC_CALLBACKS")
-    if callbacks:
+        callbacks = []
+    else:
         callbacks = callbacks.split(",")
-        init_callback(callbacks)
+    init_callback(callbacks)
     serve_model_name = os.getenv("SERVE_NAME")
     await app_startup()
     await callback.on_startup(

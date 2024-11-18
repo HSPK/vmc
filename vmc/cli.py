@@ -75,7 +75,7 @@ def serve(
             "--log-level",
             "info",
             "--timeout",
-            "300",
+            "3000",
             "vmc.serve.server:app",
         ]
 
@@ -111,7 +111,7 @@ def start_server(port: int | None = None, reload: bool = False):
             "--worker-class",
             "uvicorn.workers.UvicornWorker",
             "--timeout",
-            "300",
+            "3000",
             "--log-level",
             "info",
             "vmc.proxy.server:app",
@@ -150,7 +150,7 @@ def manager(host: str, port: int, reload: bool):
             "--log-level",
             "info",
             "--timeout",
-            "300",
+            "3000",
             "vmc.serve.manager.server:app",
         ]
     else:

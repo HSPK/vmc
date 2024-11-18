@@ -21,6 +21,9 @@ def set_callback(callback: VMCCallbackGroup):
 
 
 def init_callback(cb_ids: list[str]):
+    if not cb_ids:
+        set_callback(VMCCallback())
+        return
     callbacks = []
     for cb_id in cb_ids:
         if cb_id == "logging":
