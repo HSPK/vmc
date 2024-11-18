@@ -3,7 +3,7 @@ import time
 import uuid
 
 from nicegui import ui
-from srag.pipeline import TransformListener
+from ragkit.pipeline import TransformListener
 
 from ui.db.schema import ChatMessage
 from ui.frontend.components.message import Message

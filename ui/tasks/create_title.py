@@ -1,4 +1,4 @@
-from srag.agent import PromptAgent, PromptAgentState
+from ragkit.agent import PromptAgent, PromptAgentState
 
 from ui.db import db
 

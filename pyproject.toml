@@ -27,11 +27,10 @@ slark = "^0.1.4"
 numpy = "<2"
 motor = "^3.6.0"
 werkzeug = "^3.1.2"
-srag = "^0.4.0"
 
 [tool.poetry.extras]
 local = ["transformers", "torch"]
-ui = ["srag", "nicegui"]
+ui = ["ragkit", "nicegui"]
 
 [tool.poetry.group.dev.dependencies]
 pdoc = "^14.5.1"
@@ -51,15 +50,9 @@ torch = "<2.3.0"
 sentence-transformers = "^3.2.1"
 optimum = {extras = ["onnxruntime"], version = "^1.23.3"}
 
-
 [tool.poetry.group.ui.dependencies]
-srag = "^0.4.0"
+ragkit = "^0.0.2"
 nicegui = "^2.5.0"
-
-[[tool.poetry.source]]
-name = "mirrors"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-priority = "primary"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
