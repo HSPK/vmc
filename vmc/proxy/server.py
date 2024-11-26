@@ -41,7 +41,8 @@ async def app_startup():
         title=f"VMC Proxy v{get_version()} Started",
         message="For more information, please visit xxx",
     )
-    await db.add_user("admin", "admin", "admin")
+    if os.getenv("VMC_MODE") == "dev":
+        await db.add_user("admin", "admin", "admin")
     print("✅ Done!")
 
 

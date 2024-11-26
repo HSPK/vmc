@@ -90,11 +90,14 @@ def adapt_completion_chunk(
     end_time: float | None = None,
     usage: CompletionUsage | None = None,
     return_original: bool = False,
+    default_role: str = "assistant",
 ):
     assert chunk.choices or usage, "No choices or usage in completion chunk"
     chunk_dict = chunk.model_dump()
     end_time = time.time() if end_time is None else end_time
     cost = compute_cost(pricing, usage.prompt_tokens, usage.completion_tokens) if usage else None
+    if chunk_dict["choices"][0]["delta"]["role"] == "":
+        chunk_dict["choices"][0]["delta"]["role"] = default_role
     return GenerationChunk(
         id=chunk.id,
         choices=chunk_dict["choices"],
