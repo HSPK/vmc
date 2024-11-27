@@ -8,6 +8,7 @@ class VMC:
         _async = AsyncVMC(*args, **kwargs)
         self.generate = _sync.generate
         self.embedding = _sync.embedding
+        self.embedding_dim = _sync.embedding_dim
         self.stream = _sync.stream
         self.rerank = _sync.rerank
         self.tokenize = _sync.tokenize
@@ -17,6 +18,7 @@ class VMC:
 
         self.agenerate = _async.generate
         self.aembedding = _async.embedding
+        self.aembedding_dim = _async.embedding_dim
         self.astream = _async.stream
         self.arerank = _async.rerank
         self.atokenize = _async.tokenize

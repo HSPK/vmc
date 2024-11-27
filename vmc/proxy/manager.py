@@ -106,6 +106,9 @@ class VirtualModelManager:
     ) -> ModelType:
         return await self.load(f"{type}/{id}")
 
+    async def exist(self, id: str, type: Literal["chat", "embedding", "audio", "reranker"]):
+        return uniform(f"{type}/{id}") in self.model_configs
+
     async def load(self, id: str, physical: bool = False):
         """Load a virtual model by id."""
         id = uniform(id)

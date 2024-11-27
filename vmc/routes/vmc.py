@@ -7,7 +7,7 @@ from vmc.db import storage
 from vmc.proxy import vmm
 from vmc.routes.wrapper import wrap_fastapi
 from vmc.types._base import BaseOutput
-from vmc.types.embedding import EmbeddingParams
+from vmc.types.embedding import EmbeddingDimensionParams, EmbeddingParams
 from vmc.types.generation import GenerationParams
 from vmc.types.generation.tokenize_params import TokenizeParams
 from vmc.types.image.upload import ImageUploadOutput
@@ -29,8 +29,22 @@ async def generate(params: GenerationParams):
 
 @router.post("/embedding")
 async def embedding(params: EmbeddingParams):
-    model = wrap_fastapi(await vmm.get(params["model"], "embedding"))
+    potential_types = ["embeddding", "chat"]
+    for t in potential_types:
+        if await vmm.exist(params["model"], t):
+            break
+    model = wrap_fastapi(await vmm.get(params["model"], t))
     return await model.embedding(**remove_keys(params, {"model"}))
+
+
+@router.post("/embedding_dimension")
+async def embedding_demension(params: EmbeddingDimensionParams):
+    potential_types = ["embeddding", "chat"]
+    for t in potential_types:
+        if await vmm.exist(params["model"], t):
+            break
+    model = wrap_fastapi(await vmm.get(params["model"], t))
+    return await model.embedding_dim()
 
 
 @router.post("/rerank")

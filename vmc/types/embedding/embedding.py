@@ -45,3 +45,10 @@ class EmbeddingResponse(BaseOutput):
     """The usage information for the request."""
 
     original_response: dict | None = None
+
+
+class EmbeddingDimensionResponse(BaseOutput):
+    typical_dimension: int
+    min_dimension: int | None = None
+    max_dimension: int | None = None
+    variable: bool = False

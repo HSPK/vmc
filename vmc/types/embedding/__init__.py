@@ -1,4 +1,9 @@
-from .create import EmbeddingParams
-from .embedding import EmbeddingResponse
+from .create import EmbeddingDimensionParams, EmbeddingParams
+from .embedding import EmbeddingDimensionResponse, EmbeddingResponse
 
-__all__ = ["EmbeddingResponse", "EmbeddingParams"]
+__all__ = [
+    "EmbeddingDimensionParams",
+    "EmbeddingResponse",
+    "EmbeddingParams",
+    "EmbeddingDimensionResponse",
+]

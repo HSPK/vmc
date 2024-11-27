@@ -15,3 +15,7 @@ class EmbeddingParams(TypedDict, total=False):
     title: str
     batch_size: int
     normalize_embeddings: bool
+
+
+class EmbeddingDimensionParams(TypedDict, total=False):
+    model: Required[str]

@@ -13,6 +13,7 @@ class FastAPIWrapper:
     def __init__(self, model: ProxyModel):
         self.model = model
         self.embedding = model._embedding
+        self.embedding_dim = model._embedding_dim
         self.rerank = model._rerank
         self.tokenize = model._tokenize
         self.transcribe = model._transcribe

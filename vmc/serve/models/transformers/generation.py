@@ -4,6 +4,7 @@ from threading import Thread
 from typing import (
     AsyncGenerator,
     Iterable,
+    List,
     Optional,
     Union,
 )
@@ -19,9 +20,11 @@ from transformers import (
 )
 from typing_extensions import Literal
 
+from vmc.models.embedding import BaseEmbeddingModel
 from vmc.models.generation import BaseGenerationModel
 from vmc.models.utils import filter_notgiven
 from vmc.types import NOT_GIVEN, NotGiven
+from vmc.types.embedding import EmbeddingDimensionResponse, EmbeddingResponse
 from vmc.types.generation.generation import (
     ChatCompletionMessage,
     Choice,
@@ -35,7 +38,7 @@ from vmc.types.generation.tokenize import TokenizeOutput
 from vmc.types.pricing import Currency
 
 
-class TransformerGeneration(BaseGenerationModel):
+class TransformerGeneration(BaseGenerationModel, BaseEmbeddingModel):
     def __init__(
         self,
         model_class: Literal["AutoModel", "AutoModelForCausalLM"] = "AutoModelForCausalLM",
@@ -70,6 +73,8 @@ class TransformerGeneration(BaseGenerationModel):
         if device_map is None:
             self.model.to(self.device)
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_id, trust_remote_code=True)
+        if self.tokenizer.pad_token_id is None:
+            self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
         self.max_length = max_length
 
     def prepare_input(self, content: Union[str, Iterable[GenerationMessageParam]]):
@@ -221,3 +226,41 @@ class TransformerGeneration(BaseGenerationModel):
             logger.warning(f"{self.model_id} Unused kwargs: {kwargs}")
         tokens = self.prepare_input(content)["input_ids"]
         return TokenizeOutput(tokens=tokens, length=[len(tok) for tok in tokens])
+
+    async def embedding(
+        self,
+        content: Union[str, List[str], Iterable[int], Iterable[Iterable[int]]],
+        embedding_method: Literal["weighted", "last", "average", "agg_one_word"] = "weighted",
+        **kwargs,
+    ) -> Generation:
+        if kwargs:
+            logger.warning(f"{self.model_id} Unused kwargs: {kwargs}")
+        created = time.time()
+        if isinstance(content, str):
+            content = [content]
+        embeddings = []
+        for item in content:
+            inputs = self.prepare_input(item)
+            with torch.no_grad():
+                last_hidden_states = (
+                    self.model(
+                        **inputs.to(self.device),
+                        output_hidden_states=True,
+                    )
+                    .hidden_states[-1]
+                    .squeeze(0)
+                )
+            weights = torch.arange(1, last_hidden_states.size(0) + 1).cuda()
+            sum_embeddings = torch.sum(last_hidden_states * weights.unsqueeze(-1), dim=0)
+            num_tokens = weights.sum()
+            sentence_embedding = sum_embeddings / num_tokens
+            embeddings.append(sentence_embedding.tolist())
+        return EmbeddingResponse(
+            created=created,
+            embed_time=time.time() - created,
+            embedding=embeddings,
+            model=self.model_id,
+        )
+
+    async def embedding_dim(self):
+        return EmbeddingDimensionResponse(typical_dimension=self.model.config.hidden_size)

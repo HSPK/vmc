@@ -3,7 +3,7 @@ from typing import Iterable, List, Literal, Union
 from vmc.callback import callback
 from vmc.models.utils import filter_notgiven
 from vmc.types._types import NOT_GIVEN, NotGiven
-from vmc.types.embedding import EmbeddingResponse
+from vmc.types.embedding import EmbeddingDimensionResponse, EmbeddingResponse
 
 from ._base import BaseModel
 
@@ -58,4 +58,11 @@ class BaseEmbeddingModel(BaseModel):
             )
         )
         await callback.on_embedding_end(model=self, output=res)
+        return res
+
+    async def embedding_dim(self) -> EmbeddingDimensionResponse:
+        raise NotImplementedError("embedding_dim is not implemented")
+
+    async def _embedding_dim(self) -> EmbeddingDimensionResponse:
+        res = await self.embedding_dim()
         return res

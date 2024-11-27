@@ -15,6 +15,7 @@ from vmc_client.types import (
     Transcription,
 )
 from vmc_client.types._base import BaseOutput
+from vmc_client.types.embedding import EmbeddingDimensionResponse
 from vmc_client.types.generation.generation_params import (
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
@@ -271,6 +272,18 @@ class SyncVMC:
                 }
             ),
             cast_to=EmbeddingResponse,
+            options={"timeout": timeout},
+        )
+
+    def embedding_dim(
+        self,
+        model: str,
+        timeout: Optional[httpx.Timeout] = None,
+    ) -> EmbeddingDimensionResponse:
+        return self._post(
+            "embedding_dimension",
+            body={"model": model},
+            cast_to=EmbeddingDimensionResponse,
             options={"timeout": timeout},
         )
 
