@@ -1,9 +1,8 @@
 import os
-from typing import Type
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from ..db import BaseDB, ItemT
+from ..db import BaseDB
 
 
 class MongoDB(BaseDB):
@@ -19,5 +18,16 @@ class MongoDB(BaseDB):
         self.client = AsyncIOMotorClient(url)
         self.db = self.client[db]
 
-    async def get_by_id(self, table_name: str, key: str, cast_to: Type[ItemT]):
-        pass
+    async def _get_by_id(self, table_name, key):
+        return await self.db[table_name].find_one({"_id": key})
+
+    async def _delete_by_id(self, table_name, key):
+        return await self.db[table_name].delete_one({"_id": key})
+
+    async def _insert(self, table_name, value):
+        if "id" in value:
+            value["_id"] = value["id"]
+        return await self.db[table_name].insert_one(value)
+
+    async def _update_by_id(self, table_name, key, value):
+        return await self.db[table_name].update_one({"_id": key}, {"$set": value})

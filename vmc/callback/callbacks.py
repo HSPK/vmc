@@ -35,11 +35,11 @@ class LoggingCallback(VMCCallback):
 
 
 class SaveGenerationToDB(VMCCallback):
-    def __init__():
+    def __init__(self):
         super().__init__(run_in_background=True)
 
     async def on_generation_end(self, model, content, generation_kwargs, output, **kwargs):
-        db.save_generation(
+        await db.save_generation(
             user_id=current_user.id,
             model_name=model.config.name,
             content=content,

@@ -42,6 +42,8 @@ async def app_startup():
         message="For more information, please visit xxx",
     )
     if os.getenv("VMC_MODE") == "dev":
+        if await db.get_user("admin"):
+            return
         await db.add_user("admin", "admin", "admin")
     print("✅ Done!")
 
