@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "vmc-client"
 packages = [{ include = "vmc_client", from = "." }]
-version = "0.0.3"
+version = "0.1.0"
 description = ""
 authors = ["HSPK <whxway@whu.edu.cn>"]
 readme = "README.md"
