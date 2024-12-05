@@ -38,6 +38,10 @@ from vmc.types.generation.tokenize import TokenizeOutput
 from vmc.types.pricing import Currency
 
 
+class GenerationConfig:
+    max_tokens: int = 512
+
+
 class TransformerGeneration(BaseGenerationModel, BaseEmbeddingModel):
     def __init__(
         self,
@@ -104,6 +108,8 @@ class TransformerGeneration(BaseGenerationModel, BaseEmbeddingModel):
         created = time.time()
         inputs = self.prepare_input(content)
         input_ids = inputs["input_ids"]
+        if max_tokens is NOT_GIVEN:
+            max_tokens = GenerationConfig.max_tokens
         response_ids = self.model.generate(
             **inputs.to(self.device),
             **filter_notgiven(
